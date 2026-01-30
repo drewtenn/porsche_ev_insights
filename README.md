@@ -116,7 +116,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 5. Transfer the CSV file to your computer
 6. Upload it to Porsche EV Insights
 
-The app supports both **"Since Start"** and **"Since Charge"** CSV exports (maximum 12 months limited by Porsche Connect).
+The app supports both **"Since Start"** and **"Since Charge"** CSV exports (maximum 12 months limited by Porsche Connect). If you export and upload both CSV files you'll have richer stats and information.
 
 ## Tech Stack
 
