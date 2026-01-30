@@ -145,7 +145,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ## How to Export Your Data
 
-1. Open **Porsche Connect** app on your phone
+1. Open **My Porsche** app on your phone
 2. Go to **Vehicle details**
 3. Scroll down to **All trip data**
 4. Tap the **download trip icon** (top right corner)
