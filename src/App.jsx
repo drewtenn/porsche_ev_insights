@@ -10,6 +10,106 @@ const precise = {
   round: (n, dp = 2) => Math.round(n * Math.pow(10, dp)) / Math.pow(10, dp)
 };
 
+// ========== UNIT SYSTEM ==========
+const UNIT_SYSTEMS = {
+  metric: {
+    id: 'metric',
+    label: 'Metric',
+    distance: 'km',
+    speed: 'km/h',
+    volume: 'L'
+  },
+  imperial_uk: {
+    id: 'imperial_uk',
+    label: 'Imperial (UK)',
+    distance: 'mi',
+    speed: 'mph',
+    volume: 'gal'
+  },
+  imperial_us: {
+    id: 'imperial_us',
+    label: 'Imperial (US)',
+    distance: 'mi',
+    speed: 'mph',
+    volume: 'gal'
+  }
+};
+
+// Consumption format options per unit system
+const FUEL_CONSUMPTION_FORMATS = {
+  metric: [
+    { id: 'L/100km', label: 'L/100km' },
+    { id: 'km/L', label: 'km/L' }
+  ],
+  imperial: [
+    { id: 'mpg', label: 'mpg' }
+  ]
+};
+
+const ELECTRIC_CONSUMPTION_FORMATS = {
+  metric: [
+    { id: 'kWh/100km', label: 'kWh/100km' },
+    { id: 'km/kWh', label: 'km/kWh' }
+  ],
+  imperial: [
+    { id: 'mi/kWh', label: 'mi/kWh' },
+    { id: 'kWh/mi', label: 'kWh/mi' },
+    { id: 'kWh/100mi', label: 'kWh/100mi' }
+  ]
+};
+
+const CURRENCIES = {
+  EUR: { symbol: '€', label: 'Euro (€)', position: 'before' },
+  USD: { symbol: '$', label: 'US Dollar ($)', position: 'before' },
+  GBP: { symbol: '£', label: 'British Pound (£)', position: 'before' },
+  CHF: { symbol: 'CHF', label: 'Swiss Franc (CHF)', position: 'after' },
+  CAD: { symbol: 'CA$', label: 'Canadian Dollar (CA$)', position: 'before' },
+  AUD: { symbol: 'A$', label: 'Australian Dollar (A$)', position: 'before' },
+  JPY: { symbol: '¥', label: 'Japanese Yen (¥)', position: 'before' },
+  CNY: { symbol: '¥', label: 'Chinese Yuan (¥)', position: 'before' },
+  SEK: { symbol: 'kr', label: 'Swedish Krona (kr)', position: 'after' },
+  NOK: { symbol: 'kr', label: 'Norwegian Krone (kr)', position: 'after' }
+};
+
+// Conversion constants
+const KM_TO_MI = 0.621371;
+const MI_TO_KM = 1.60934;
+const L_TO_UK_GAL = 0.219969;
+const L_TO_US_GAL = 0.264172;
+const UK_GAL_TO_L = 4.54609;
+const US_GAL_TO_L = 3.78541;
+
+// Unit conversion helpers
+const unitConvert = {
+  // Distance conversions
+  kmToMi: (km) => precise.mul(km, KM_TO_MI),
+  miToKm: (mi) => precise.mul(mi, MI_TO_KM),
+
+  // Speed conversions (same as distance for km/h <-> mph)
+  kmhToMph: (kmh) => precise.mul(kmh, KM_TO_MI),
+  mphToKmh: (mph) => precise.mul(mph, MI_TO_KM),
+
+  // Volume conversions
+  lToUkGal: (l) => precise.mul(l, L_TO_UK_GAL),
+  lToUsGal: (l) => precise.mul(l, L_TO_US_GAL),
+  ukGalToL: (gal) => precise.mul(gal, UK_GAL_TO_L),
+  usGalToL: (gal) => precise.mul(gal, US_GAL_TO_L),
+
+  // Fuel consumption conversions (from L/100km)
+  l100kmToKmL: (l100km) => l100km > 0 ? precise.div(100, l100km) : 0,
+  l100kmToMpgUk: (l100km) => l100km > 0 ? precise.div(UK_GAL_TO_L * 100, l100km * MI_TO_KM) : 0,
+  l100kmToMpgUs: (l100km) => l100km > 0 ? precise.div(US_GAL_TO_L * 100, l100km * MI_TO_KM) : 0,
+
+  // Electric consumption conversions (from kWh/100km)
+  // Metric formats
+  kwh100kmToKmKwh: (kwh100km) => kwh100km > 0 ? precise.div(100, kwh100km) : 0,
+  // Imperial formats
+  kwh100kmToMiKwh: (kwh100km) => kwh100km > 0 ? precise.div(100, precise.mul(kwh100km, MI_TO_KM)) : 0,
+  kwh100kmToKwhMi: (kwh100km) => kwh100km > 0 ? precise.mul(kwh100km, MI_TO_KM / 100) : 0,
+  kwh100kmToKwh100mi: (kwh100km) => kwh100km > 0 ? precise.mul(kwh100km, MI_TO_KM) : 0
+};
+
+
 // ========== DOWNLOAD HELPER (works reliably across all browsers including Chrome) ==========
 const downloadFile = async (content, filename) => {
   // Use File System Access API for Chrome - gives native "Save As" dialog
@@ -525,6 +625,10 @@ export default function App() {
   const [electricityPrice, setElectricityPrice] = useState(0.25);
   const [petrolPrice, setPetrolPrice] = useState(1.80);
   const [petrolConsumption, setPetrolConsumption] = useState(8.0);
+  const [unitSystem, setUnitSystem] = useState('metric');
+  const [currency, setCurrency] = useState('EUR');
+  const [fuelConsFormat, setFuelConsFormat] = useState('L/100km');
+  const [elecConsFormat, setElecConsFormat] = useState('kWh/100km');
 
   const [modalConfig, setModalConfig] = useState(null);
   const [timeView, setTimeView] = useState('month'); // 'day', 'week', 'month'
@@ -548,30 +652,231 @@ export default function App() {
       setElectricityPrice(savedSettings.electricityPrice ?? 0.25);
       setPetrolPrice(savedSettings.petrolPrice ?? 1.80);
       setPetrolConsumption(savedSettings.petrolConsumption ?? 8.0);
+      setUnitSystem(savedSettings.unitSystem ?? 'metric');
+      setCurrency(savedSettings.currency ?? 'EUR');
+      setFuelConsFormat(savedSettings.fuelConsFormat ?? 'L/100km');
+      setElecConsFormat(savedSettings.elecConsFormat ?? 'kWh/100km');
     }
   }, []);
 
   useEffect(() => {
-    safeStorage.set(STORAGE_KEYS.SETTINGS, { electricityPrice, petrolPrice, petrolConsumption });
-  }, [electricityPrice, petrolPrice, petrolConsumption]);
+    safeStorage.set(STORAGE_KEYS.SETTINGS, { electricityPrice, petrolPrice, petrolConsumption, unitSystem, currency, fuelConsFormat, elecConsFormat });
+  }, [electricityPrice, petrolPrice, petrolConsumption, unitSystem, currency, fuelConsFormat, elecConsFormat]);
+
+  // Reset consumption formats and currency when unit system changes
+  useEffect(() => {
+    if (unitSystem === 'metric') {
+      setCurrency('EUR');
+      if (!['L/100km', 'km/L'].includes(fuelConsFormat)) {
+        setFuelConsFormat('L/100km');
+      }
+      if (!['kWh/100km', 'km/kWh'].includes(elecConsFormat)) {
+        setElecConsFormat('kWh/100km');
+      }
+    } else if (unitSystem === 'imperial_uk') {
+      setCurrency('GBP');
+      setFuelConsFormat('mpg');
+      if (!['mi/kWh', 'kWh/mi', 'kWh/100mi'].includes(elecConsFormat)) {
+        setElecConsFormat('mi/kWh');
+      }
+    } else if (unitSystem === 'imperial_us') {
+      setCurrency('USD');
+      setFuelConsFormat('mpg');
+      if (!['mi/kWh', 'kWh/mi', 'kWh/100mi'].includes(elecConsFormat)) {
+        setElecConsFormat('mi/kWh');
+      }
+    }
+  }, [unitSystem]);
 
   const data = useMemo(() => appData || (useSampleData ? SAMPLE_DATA : null), [appData, useSampleData]);
+
+  // ========== UNIT FORMATTING HELPERS ==========
+  const units = useMemo(() => {
+    const isImperial = unitSystem.startsWith('imperial');
+    const isUK = unitSystem === 'imperial_uk';
+    const sys = UNIT_SYSTEMS[unitSystem];
+    const curr = CURRENCIES[currency];
+
+    // Electric consumption conversion based on selected format (from kWh/100km)
+    const convertElecCons = (kwh100km) => {
+      if (kwh100km <= 0) return 0;
+      switch (elecConsFormat) {
+        case 'kWh/100km': return kwh100km;
+        case 'km/kWh': return unitConvert.kwh100kmToKmKwh(kwh100km);
+        case 'mi/kWh': return unitConvert.kwh100kmToMiKwh(kwh100km);
+        case 'kWh/mi': return unitConvert.kwh100kmToKwhMi(kwh100km);
+        case 'kWh/100mi': return unitConvert.kwh100kmToKwh100mi(kwh100km);
+        default: return kwh100km;
+      }
+    };
+
+    // Fuel consumption conversion based on selected format (from L/100km)
+    const convertFuelCons = (l100km) => {
+      if (l100km <= 0) return 0;
+      switch (fuelConsFormat) {
+        case 'L/100km': return l100km;
+        case 'km/L': return unitConvert.l100kmToKmL(l100km);
+        case 'mpg': return isUK ? unitConvert.l100kmToMpgUk(l100km) : unitConvert.l100kmToMpgUs(l100km);
+        default: return l100km;
+      }
+    };
+
+    return {
+      // Format distance (km -> mi if imperial)
+      dist: (km, decimals = 0) => {
+        const val = isImperial ? unitConvert.kmToMi(km) : km;
+        return { value: precise.round(val, decimals), unit: sys.distance, formatted: `${precise.round(val, decimals).toLocaleString()} ${sys.distance}` };
+      },
+      // Format speed (km/h -> mph if imperial)
+      speed: (kmh, decimals = 0) => {
+        const val = isImperial ? unitConvert.kmhToMph(kmh) : kmh;
+        return { value: precise.round(val, decimals), unit: sys.speed, formatted: `${precise.round(val, decimals)} ${sys.speed}` };
+      },
+      // Format electric consumption based on selected format
+      elecCons: (kwh100km, decimals = 1) => {
+        const val = convertElecCons(kwh100km);
+        return { value: precise.round(val, decimals), unit: elecConsFormat, formatted: `${precise.round(val, decimals)} ${elecConsFormat}` };
+      },
+      // Format fuel consumption based on selected format
+      fuelCons: (l100km, decimals = 1) => {
+        const val = convertFuelCons(l100km);
+        return { value: precise.round(val, decimals), unit: fuelConsFormat, formatted: `${precise.round(val, decimals)} ${fuelConsFormat}` };
+      },
+      // Format volume (L -> gal if imperial)
+      vol: (liters, decimals = 1) => {
+        const val = isImperial ? (isUK ? unitConvert.lToUkGal(liters) : unitConvert.lToUsGal(liters)) : liters;
+        return { value: precise.round(val, decimals), unit: sys.volume, formatted: `${precise.round(val, decimals)} ${sys.volume}` };
+      },
+      // Format currency
+      money: (amount, decimals = 2) => {
+        const val = precise.round(amount, decimals);
+        return curr.position === 'before' ? `${curr.symbol}${val}` : `${val} ${curr.symbol}`;
+      },
+      // Get unit labels
+      distUnit: sys.distance,
+      speedUnit: sys.speed,
+      elecConsUnit: elecConsFormat,
+      fuelConsUnit: fuelConsFormat,
+      volUnit: sys.volume,
+      currSymbol: curr.symbol
+    };
+  }, [unitSystem, currency, elecConsFormat, fuelConsFormat]);
+
+  // Trip type labels with converted distances
+  const tripTypeLabels = useMemo(() => {
+    const isImperial = unitSystem.startsWith('imperial');
+    const distUnit = UNIT_SYSTEMS[unitSystem].distance;
+
+    if (isImperial) {
+      // Convert km thresholds to miles: 5km->3mi, 10km->6mi, 20km->12mi, 50km->31mi
+      return {
+        'Micro (<5km)': `Micro (<3${distUnit})`,
+        'Short (5-10km)': `Short (3-6${distUnit})`,
+        'Medium (10-20km)': `Medium (6-12${distUnit})`,
+        'Long (20-50km)': `Long (12-31${distUnit})`,
+        'Very Long (>50km)': `Very Long (>31${distUnit})`
+      };
+    }
+    return {
+      'Micro (<5km)': `Micro (<5${distUnit})`,
+      'Short (5-10km)': `Short (5-10${distUnit})`,
+      'Medium (10-20km)': `Medium (10-20${distUnit})`,
+      'Long (20-50km)': `Long (20-50${distUnit})`,
+      'Very Long (>50km)': `Very Long (>50${distUnit})`
+    };
+  }, [unitSystem]);
+
+  // Speed range labels with conversions
+  const speedRangeLabels = useMemo(() => {
+    const isImperial = unitSystem.startsWith('imperial');
+    const speedUnit = UNIT_SYSTEMS[unitSystem].speed;
+
+    if (isImperial) {
+      // Convert km/h to mph: 0-20->0-12, 20-40->12-25, 40-60->25-37, 60-80->37-50, 80+->50+
+      return {
+        '0-20 km/h': `0-12 ${speedUnit}`,
+        '20-40 km/h': `12-25 ${speedUnit}`,
+        '40-60 km/h': `25-37 ${speedUnit}`,
+        '60-80 km/h': `37-50 ${speedUnit}`,
+        '80+ km/h': `50+ ${speedUnit}`
+      };
+    }
+    return {
+      '0-20 km/h': `0-20 ${speedUnit}`,
+      '20-40 km/h': `20-40 ${speedUnit}`,
+      '40-60 km/h': `40-60 ${speedUnit}`,
+      '60-80 km/h': `60-80 ${speedUnit}`,
+      '80+ km/h': `80+ ${speedUnit}`
+    };
+  }, [unitSystem]);
+
+  // Chart domain helper based on electric consumption format
+  const elecConsDomain = useMemo(() => {
+    // Returns appropriate Y-axis domain for electric consumption charts
+    switch (elecConsFormat) {
+      case 'kWh/100km': return [15, 40];      // Typical range for kWh/100km
+      case 'km/kWh': return [2, 7];           // Inverse: higher is better
+      case 'mi/kWh': return [1.5, 5];         // Typical range for mi/kWh
+      case 'kWh/mi': return [0.2, 0.8];       // Typical range for kWh/mi
+      case 'kWh/100mi': return [25, 65];      // Typical range for kWh/100mi
+      default: return [15, 40];
+    }
+  }, [elecConsFormat]);
+
+  // Converted trip types data for charts
+  const convertedTripTypes = useMemo(() => {
+    if (!data?.tripTypes) return [];
+    return data.tripTypes.map(t => ({
+      ...t,
+      type: tripTypeLabels[t.type] || t.type,
+      consumption: units.elecCons(t.consumption).value
+    }));
+  }, [data, tripTypeLabels, units]);
+
+  // Converted speed efficiency data for charts
+  const convertedSpeedEfficiency = useMemo(() => {
+    if (!data?.speedEfficiency) return [];
+    return data.speedEfficiency.map(s => ({
+      ...s,
+      range: speedRangeLabels[s.range] || s.range,
+      consumption: units.elecCons(s.consumption).value
+    }));
+  }, [data, speedRangeLabels, units]);
+
+  // Converted day data for charts
+  const convertedDayData = useMemo(() => {
+    if (!data?.dayData) return [];
+    return data.dayData.map(d => ({
+      ...d,
+      distance: units.dist(d.distance).value,
+      avgDist: units.dist(d.avgDist).value,
+      consumption: units.elecCons(d.consumption).value
+    }));
+  }, [data, units]);
 
   // Time-based aggregated data based on timeView selection
   const timeViewData = useMemo(() => {
     if (!data) return [];
-    if (timeView === 'day') return data.dailyData || [];
-    if (timeView === 'week') return data.weeklyData || [];
+
+    const transformData = (items) => items.map(item => ({
+      ...item,
+      distance: units.dist(item.distance).value,
+      avgConsumption: units.elecCons(item.avgConsumption || item.consumption).value,
+      avgDist: item.avgDist ? units.dist(item.avgDist).value : undefined
+    }));
+
+    if (timeView === 'day') return transformData(data.dailyData || []);
+    if (timeView === 'week') return transformData(data.weeklyData || []);
     // Default to monthly - transform monthlyData to match the same structure
     return (data.monthlyData || []).map(m => ({
       period: m.month,
       label: m.month,
       trips: m.trips,
-      distance: m.distance,
-      avgConsumption: m.consumption,
+      distance: units.dist(m.distance).value,
+      avgConsumption: units.elecCons(m.consumption).value,
       energy: precise.div(precise.mul(m.distance, m.consumption), 100)
     }));
-  }, [data, timeView]);
+  }, [data, timeView, units]);
 
   const costs = useMemo(() => {
     if (!data) return null;
@@ -1007,14 +1312,14 @@ export default function App() {
 
   const handleBackup = useCallback(() => {
     try {
-      const backup = { version: 1, timestamp: new Date().toISOString(), data: appData, settings: { electricityPrice, petrolPrice, petrolConsumption } };
+      const backup = { version: 1, timestamp: new Date().toISOString(), data: appData, settings: { electricityPrice, petrolPrice, petrolConsumption, unitSystem, currency, fuelConsFormat, elecConsFormat } };
 
       const filename = `taycan-backup-${new Date().toISOString().split('T')[0]}.json`;
       downloadFile(JSON.stringify(backup, null, 2), filename);
     } catch (err) {
       setModalConfig({ title: 'Export Error', message: 'Failed to create backup: ' + err.message, variant: 'danger' });
     }
-  }, [appData, electricityPrice, petrolPrice, petrolConsumption]);
+  }, [appData, electricityPrice, petrolPrice, petrolConsumption, unitSystem, currency, fuelConsFormat, elecConsFormat]);
 
   const handleRestore = useCallback((file) => {
     const reader = new FileReader();
@@ -1026,6 +1331,10 @@ export default function App() {
           setElectricityPrice(backup.settings.electricityPrice ?? 0.25);
           setPetrolPrice(backup.settings.petrolPrice ?? 1.80);
           setPetrolConsumption(backup.settings.petrolConsumption ?? 8.0);
+          setUnitSystem(backup.settings.unitSystem ?? 'metric');
+          setCurrency(backup.settings.currency ?? 'EUR');
+          setFuelConsFormat(backup.settings.fuelConsFormat ?? 'L/100km');
+          setElecConsFormat(backup.settings.elecConsFormat ?? 'kWh/100km');
         }
         setModalConfig({ title: 'Success', message: 'Backup restored successfully!', variant: 'success' });
       } catch (err) {
@@ -1506,20 +1815,71 @@ export default function App() {
               <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-zinc-900'}`}>Settings</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Units & Currency */}
+                <div className={`p-4 rounded-xl border ${darkMode ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}>
+                  <h3 className={`text-sm font-semibold mb-4 ${darkMode ? 'text-white' : 'text-zinc-900'}`}>Units & Currency</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className={`block text-xs mb-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>Unit System</label>
+                      <select value={unitSystem} onChange={(e) => setUnitSystem(e.target.value)} className={`w-full px-3 py-2 rounded-lg text-sm focus:border-sky-500 outline-none ${darkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-50 border-zinc-300 text-zinc-900'} border`}>
+                        {Object.entries(UNIT_SYSTEMS).map(([key, sys]) => (
+                          <option key={key} value={key}>{sys.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={`block text-xs mb-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>Currency</label>
+                      <select value={currency} onChange={(e) => setCurrency(e.target.value)} className={`w-full px-3 py-2 rounded-lg text-sm focus:border-sky-500 outline-none ${darkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-50 border-zinc-300 text-zinc-900'} border`}>
+                        {Object.entries(CURRENCIES).map(([key, curr]) => (
+                          <option key={key} value={key}>{curr.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={`block text-xs mb-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>Fuel Consumption</label>
+                      <select
+                        value={fuelConsFormat}
+                        onChange={(e) => setFuelConsFormat(e.target.value)}
+                        className={`w-full px-3 py-2 rounded-lg text-sm focus:border-sky-500 outline-none ${darkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-50 border-zinc-300 text-zinc-900'} border`}
+                        disabled={unitSystem.startsWith('imperial')}
+                      >
+                        {(unitSystem.startsWith('imperial') ? FUEL_CONSUMPTION_FORMATS.imperial : FUEL_CONSUMPTION_FORMATS.metric).map(fmt => (
+                          <option key={fmt.id} value={fmt.id}>{fmt.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={`block text-xs mb-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>Electric Consumption</label>
+                      <select
+                        value={elecConsFormat}
+                        onChange={(e) => setElecConsFormat(e.target.value)}
+                        className={`w-full px-3 py-2 rounded-lg text-sm focus:border-sky-500 outline-none ${darkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-50 border-zinc-300 text-zinc-900'} border`}
+                      >
+                        {(unitSystem.startsWith('imperial') ? ELECTRIC_CONSUMPTION_FORMATS.imperial : ELECTRIC_CONSUMPTION_FORMATS.metric).map(fmt => (
+                          <option key={fmt.id} value={fmt.id}>{fmt.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <p className={`text-xs ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                      Distance: {UNIT_SYSTEMS[unitSystem].distance} | Speed: {UNIT_SYSTEMS[unitSystem].speed}
+                    </p>
+                  </div>
+                </div>
+
                 {/* Cost Settings */}
                 <div className={`p-4 rounded-xl border ${darkMode ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}>
                   <h3 className={`text-sm font-semibold mb-4 ${darkMode ? 'text-white' : 'text-zinc-900'}`}>Cost Settings</h3>
                   <div className="space-y-3">
                     <div>
-                      <label className={`block text-xs mb-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>Electricity (€/kWh)</label>
+                      <label className={`block text-xs mb-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>Electricity ({CURRENCIES[currency].symbol}/kWh)</label>
                       <input type="number" step="0.01" value={electricityPrice} onChange={(e) => setElectricityPrice(parseFloat(e.target.value) || 0)} className={`w-full px-3 py-2 rounded-lg text-sm focus:border-sky-500 outline-none ${darkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-50 border-zinc-300 text-zinc-900'} border`} />
                     </div>
                     <div>
-                      <label className={`block text-xs mb-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>Petrol (€/L)</label>
+                      <label className={`block text-xs mb-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>Petrol ({CURRENCIES[currency].symbol}/{unitSystem === 'metric' ? 'L' : 'gal'})</label>
                       <input type="number" step="0.01" value={petrolPrice} onChange={(e) => setPetrolPrice(parseFloat(e.target.value) || 0)} className={`w-full px-3 py-2 rounded-lg text-sm focus:border-sky-500 outline-none ${darkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-50 border-zinc-300 text-zinc-900'} border`} />
                     </div>
                     <div>
-                      <label className={`block text-xs mb-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>Petrol Consumption (L/100km)</label>
+                      <label className={`block text-xs mb-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>Petrol Consumption ({fuelConsFormat})</label>
                       <input type="number" step="0.1" value={petrolConsumption} onChange={(e) => setPetrolConsumption(parseFloat(e.target.value) || 0)} className={`w-full px-3 py-2 rounded-lg text-sm focus:border-sky-500 outline-none ${darkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-50 border-zinc-300 text-zinc-900'} border`} />
                     </div>
                   </div>
@@ -1598,13 +1958,13 @@ export default function App() {
               <div className="space-y-5">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <StatCard darkMode={darkMode} label="Total Trips" value={data.summary.totalTrips} color="sky" />
-                  <StatCard darkMode={darkMode} label="Total Distance" value={`${data.summary.totalDistance.toLocaleString()} km`} color="blue" />
+                  <StatCard darkMode={darkMode} label="Total Distance" value={units.dist(data.summary.totalDistance).formatted} color="blue" />
                   <StatCard darkMode={darkMode} label="Energy Used" value={`${data.summary.totalEnergy.toLocaleString()} kWh`} color="emerald" />
-                  <StatCard darkMode={darkMode} label="Avg Consumption" value={`${data.summary.avgConsumption} kWh/100km`} color="purple" />
+                  <StatCard darkMode={darkMode} label="Avg Consumption" value={units.elecCons(data.summary.avgConsumption).formatted} color="purple" />
                   <StatCard darkMode={darkMode} label="Charge Cycles" value={data.summary.totalChargeCycles} color="cyan" />
                   <StatCard darkMode={darkMode} label="Trips/Charge" value={data.summary.avgTripsPerCharge} color="pink" />
                   <StatCard darkMode={darkMode} label="Short Trips" value={`${data.summary.shortTripsPct}%`} color="orange" />
-                  <StatCard darkMode={darkMode} label="Avg/Month" value={`${data.summary.avgKmPerMonth} km`} color="teal" />
+                  <StatCard darkMode={darkMode} label="Avg/Month" value={units.dist(data.summary.avgKmPerMonth).formatted} color="teal" />
                 </div>
 
                 {/* Time View Selector */}
@@ -1636,7 +1996,7 @@ export default function App() {
                       <YAxis yAxisId="right" orientation="right" stroke={chartColors.axis} fontSize={11} />
                       <Tooltip contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px' }} itemStyle={{ color: chartColors.tooltipText }} labelStyle={{ color: chartColors.tooltipText }} />
                       <Legend />
-                      <Bar yAxisId="left" dataKey="distance" name="Distance (km)" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                      <Bar yAxisId="left" dataKey="distance" name={`Distance (${units.distUnit})`} fill="#f59e0b" radius={[4, 4, 0, 0]} />
                       <Line yAxisId="right" type="monotone" dataKey="trips" name="Trips" stroke="#22c55e" strokeWidth={2} dot={{ fill: '#22c55e', r: 3 }} />
                     </ComposedChart>
                   </ResponsiveContainer>
@@ -1646,8 +2006,8 @@ export default function App() {
                 <ChartCard darkMode={darkMode} title="Trip Type Distribution">
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart margin={{ top: 30, right: 30, bottom: 10, left: 30 }}>
-                      <Pie data={data.tripTypes} dataKey="count" nameKey="type" cx="50%" cy="45%" outerRadius={90} label={({ count }) => count > 0 ? count : ''}>
-                        {data.tripTypes.map((entry, i) => <Cell key={`cell-${i}`} fill={entry.color} />)}
+                      <Pie data={convertedTripTypes} dataKey="count" nameKey="type" cx="50%" cy="45%" outerRadius={90} label={({ count }) => count > 0 ? count : ''}>
+                        {convertedTripTypes.map((entry, i) => <Cell key={`cell-${i}`} fill={entry.color} />)}
                       </Pie>
                       <Tooltip contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px' }} itemStyle={{ color: chartColors.tooltipText }} labelStyle={{ color: chartColors.tooltipText }} />
                       <Legend wrapperStyle={{ paddingTop: '20px' }} />
@@ -1686,7 +2046,7 @@ export default function App() {
                       <XAxis dataKey="label" stroke={chartColors.axis} fontSize={10} interval={timeView === 'day' ? 6 : 0} />
                       <YAxis stroke={chartColors.axis} fontSize={11} />
                       <Tooltip contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px' }} itemStyle={{ color: chartColors.tooltipText }} labelStyle={{ color: chartColors.tooltipText }} />
-                      <Area type="monotone" dataKey="distance" name="Distance (km)" stroke="#f59e0b" fill="#f59e0b44" strokeWidth={2} />
+                      <Area type="monotone" dataKey="distance" name={`Distance (${units.distUnit})`} stroke="#f59e0b" fill="#f59e0b44" strokeWidth={2} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </ChartCard>
@@ -1705,7 +2065,7 @@ export default function App() {
                   </ChartCard>
                   <ChartCard darkMode={darkMode} title="Activity by Day of Week">
                     <ResponsiveContainer width="100%" height={260}>
-                      <ComposedChart data={data.dayData}>
+                      <ComposedChart data={convertedDayData}>
                         <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
                         <XAxis dataKey="day" stroke={chartColors.axis} fontSize={11} />
                         <YAxis yAxisId="left" stroke={chartColors.axis} fontSize={11} />
@@ -1713,7 +2073,7 @@ export default function App() {
                         <Tooltip contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px' }} itemStyle={{ color: chartColors.tooltipText }} labelStyle={{ color: chartColors.tooltipText }} />
                         <Legend />
                         <Bar yAxisId="left" dataKey="trips" name="Trips" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-                        <Line yAxisId="right" type="monotone" dataKey="avgDist" name="Avg km" stroke="#f59e0b" strokeWidth={2} />
+                        <Line yAxisId="right" type="monotone" dataKey="avgDist" name={`Avg ${units.distUnit}`} stroke="#f59e0b" strokeWidth={2} />
                       </ComposedChart>
                     </ResponsiveContainer>
                   </ChartCard>
@@ -1722,13 +2082,13 @@ export default function App() {
                 {/* Day of Week Average Distance */}
                 <ChartCard darkMode={darkMode} title="Average Trip Distance by Day of Week">
                   <ResponsiveContainer width="100%" height={260}>
-                    <BarChart data={data.dayData}>
+                    <BarChart data={convertedDayData}>
                       <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
                       <XAxis dataKey="day" stroke={chartColors.axis} fontSize={11} />
                       <YAxis stroke={chartColors.axis} fontSize={11} />
                       <Tooltip contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px' }} itemStyle={{ color: chartColors.tooltipText }} labelStyle={{ color: chartColors.tooltipText }} />
-                      <Bar dataKey="avgDist" name="Avg km/trip" fill="#3b82f6" radius={[4, 4, 0, 0]}>
-                        {data.dayData.map((entry, i) => (
+                      <Bar dataKey="avgDist" name={`Avg ${units.distUnit}/trip`} fill="#3b82f6" radius={[4, 4, 0, 0]}>
+                        {convertedDayData.map((entry, i) => (
                           <Cell key={`cell-${i}`} fill={entry.day === 'Sat' ? '#f59e0b' : '#3b82f6'} />
                         ))}
                       </Bar>
@@ -1747,29 +2107,29 @@ export default function App() {
                 <div className="grid grid-cols-3 gap-4">
                   <div className={`p-4 rounded-xl text-center ${darkMode ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-emerald-50 border border-emerald-200'}`}>
                     <p className={`text-3xl font-bold ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                      {data.bestTrip?.consumption || '—'}
+                      {data.bestTrip ? units.elecCons(data.bestTrip.consumption).value : '—'}
                     </p>
-                    <p className={`text-sm ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>Best kWh/100km</p>
+                    <p className={`text-sm ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>Best {units.elecConsUnit}</p>
                     {data.bestTrip && (
                       <p className={`text-xs mt-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                        {data.bestTrip.date} • {data.bestTrip.distance}km @ {data.bestTrip.speed}km/h
+                        {data.bestTrip.date} • {units.dist(data.bestTrip.distance).formatted} @ {units.speed(data.bestTrip.speed).formatted}
                       </p>
                     )}
                   </div>
                   <div className={`p-4 rounded-xl text-center ${darkMode ? 'bg-zinc-800/50 border border-zinc-700' : 'bg-zinc-100 border border-zinc-200'}`}>
                     <p className={`text-3xl font-bold ${darkMode ? 'text-zinc-200' : 'text-zinc-800'}`}>
-                      {data.summary.avgConsumption}
+                      {units.elecCons(data.summary.avgConsumption).value}
                     </p>
-                    <p className={`text-sm ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>Average kWh/100km</p>
+                    <p className={`text-sm ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>Average {units.elecConsUnit}</p>
                   </div>
                   <div className={`p-4 rounded-xl text-center ${darkMode ? 'bg-red-500/10 border border-red-500/20' : 'bg-red-50 border border-red-200'}`}>
                     <p className={`text-3xl font-bold ${darkMode ? 'text-red-400' : 'text-red-600'}`}>
-                      {data.worstTrip?.consumption || '—'}
+                      {data.worstTrip ? units.elecCons(data.worstTrip.consumption).value : '—'}
                     </p>
-                    <p className={`text-sm ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>Worst kWh/100km</p>
+                    <p className={`text-sm ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>Worst {units.elecConsUnit}</p>
                     {data.worstTrip && (
                       <p className={`text-xs mt-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                        {data.worstTrip.date} • {data.worstTrip.distance}km @ {data.worstTrip.speed}km/h
+                        {data.worstTrip.date} • {units.dist(data.worstTrip.distance).formatted} @ {units.speed(data.worstTrip.speed).formatted}
                       </p>
                     )}
                   </div>
@@ -1800,14 +2160,14 @@ export default function App() {
                     <ComposedChart data={timeViewData}>
                       <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
                       <XAxis dataKey="label" stroke={chartColors.axis} fontSize={10} interval={timeView === 'day' ? 6 : 0} />
-                      <YAxis stroke={chartColors.axis} fontSize={11} domain={[20, 35]} />
+                      <YAxis stroke={chartColors.axis} fontSize={11} domain={elecConsDomain} />
                       <Tooltip
                         contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px' }}
                         itemStyle={{ color: chartColors.tooltipText }}
                         labelStyle={{ color: chartColors.tooltipText }}
                       />
                       <Legend />
-                      <Line type="monotone" dataKey="avgConsumption" name="kWh/100km" stroke="#f59e0b" strokeWidth={2} dot={{ fill: '#f59e0b', r: 3 }} />
+                      <Line type="monotone" dataKey="avgConsumption" name={units.elecConsUnit} stroke="#f59e0b" strokeWidth={2} dot={{ fill: '#f59e0b', r: 3 }} />
                     </ComposedChart>
                   </ResponsiveContainer>
                 </ChartCard>
@@ -1816,21 +2176,21 @@ export default function App() {
                   {/* Efficiency by Speed Range */}
                   <ChartCard darkMode={darkMode} title="Efficiency by Speed Range">
                     <ResponsiveContainer width="100%" height={260}>
-                      <BarChart data={data.speedEfficiency}>
+                      <BarChart data={convertedSpeedEfficiency}>
                         <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
                         <XAxis dataKey="range" stroke={chartColors.axis} fontSize={10} />
-                        <YAxis stroke={chartColors.axis} fontSize={11} domain={[15, 35]} />
+                        <YAxis stroke={chartColors.axis} fontSize={11} domain={elecConsDomain} />
                         <Tooltip
                           contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px' }}
                           itemStyle={{ color: chartColors.tooltipText }}
                           labelStyle={{ color: chartColors.tooltipText }}
-                          formatter={(value, name) => name === 'consumption' ? [`${value} kWh/100km`, 'Avg Consumption'] : [`${value} trips`, 'Trips']}
+                          formatter={(value, name) => name === 'consumption' ? [`${value} ${units.elecConsUnit}`, 'Avg Consumption'] : [`${value} trips`, 'Trips']}
                         />
                         <Bar dataKey="consumption" name="consumption" fill="#ef4444" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                     <p className={`text-sm mt-2 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                      Sweet spot: 40-80 km/h for best efficiency
+                      Sweet spot: {unitSystem === 'metric' ? '40-80 km/h' : '25-50 mph'} for best efficiency
                     </p>
                   </ChartCard>
 
@@ -1838,15 +2198,15 @@ export default function App() {
                   {data.seasonalData && data.seasonalData.length > 0 && (
                     <ChartCard darkMode={darkMode} title="Seasonal Efficiency">
                       <ResponsiveContainer width="100%" height={260}>
-                        <BarChart data={data.seasonalData}>
+                        <BarChart data={data.seasonalData.map(s => ({ ...s, consumption: units.elecCons(s.consumption).value }))}>
                           <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
                           <XAxis dataKey="season" stroke={chartColors.axis} fontSize={11} />
-                          <YAxis stroke={chartColors.axis} fontSize={11} domain={[20, 32]} />
+                          <YAxis stroke={chartColors.axis} fontSize={11} domain={elecConsDomain} />
                           <Tooltip
                             contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px' }}
                             itemStyle={{ color: chartColors.tooltipText }}
                             labelStyle={{ color: chartColors.tooltipText }}
-                            formatter={(value, name) => name === 'consumption' ? [`${value} kWh/100km`, 'Consumption'] : [`${value}`, name]}
+                            formatter={(value, name) => name === 'consumption' ? [`${value} ${units.elecConsUnit}`, 'Consumption'] : [`${value}`, name]}
                           />
                           <Bar dataKey="consumption" name="consumption" radius={[4, 4, 0, 0]}>
                             {data.seasonalData.map((entry, i) => (
@@ -1862,13 +2222,13 @@ export default function App() {
                 {/* Trip Type Efficiency */}
                 <ChartCard darkMode={darkMode} title="Efficiency by Trip Type">
                   <ResponsiveContainer width="100%" height={260}>
-                    <BarChart data={data.tripTypes}>
+                    <BarChart data={convertedTripTypes}>
                       <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
                       <XAxis dataKey="type" stroke={chartColors.axis} fontSize={9} />
-                      <YAxis stroke={chartColors.axis} fontSize={11} domain={[20, 36]} />
+                      <YAxis stroke={chartColors.axis} fontSize={11} domain={elecConsDomain} />
                       <Tooltip contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px' }} itemStyle={{ color: chartColors.tooltipText }} labelStyle={{ color: chartColors.tooltipText }} />
-                      <Bar dataKey="consumption" name="kWh/100km" radius={[4, 4, 0, 0]}>
-                        {data.tripTypes.map((entry, i) => <Cell key={`cell-${i}`} fill={entry.color} />)}
+                      <Bar dataKey="consumption" name={units.elecConsUnit} radius={[4, 4, 0, 0]}>
+                        {convertedTripTypes.map((entry, i) => <Cell key={`cell-${i}`} fill={entry.color} />)}
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
@@ -1879,9 +2239,9 @@ export default function App() {
             {activeTab === 'costs' && costs && (
               <div className="space-y-5">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <StatCard darkMode={darkMode} label="Electric Cost" value={`€${costs.electricCost}`} subtitle={`€${costs.costPerKmElectric}/km`} color="emerald" />
-                  <StatCard darkMode={darkMode} label="Petrol Equivalent" value={`€${costs.petrolCost}`} subtitle={`€${costs.costPerKmPetrol}/km`} color="red" />
-                  <StatCard darkMode={darkMode} label="Total Savings" value={`€${costs.savings}`} subtitle="vs petrol" color="sky" />
+                  <StatCard darkMode={darkMode} label="Electric Cost" value={units.money(costs.electricCost)} subtitle={`${units.money(costs.costPerKmElectric)}/${units.distUnit}`} color="emerald" />
+                  <StatCard darkMode={darkMode} label="Petrol Equivalent" value={units.money(costs.petrolCost)} subtitle={`${units.money(costs.costPerKmPetrol)}/${units.distUnit}`} color="red" />
+                  <StatCard darkMode={darkMode} label="Total Savings" value={units.money(costs.savings)} subtitle="vs petrol" color="sky" />
                   <StatCard darkMode={darkMode} label="Savings Rate" value={`${costs.savingsRate}%`} subtitle="cheaper" color="blue" />
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -1895,10 +2255,10 @@ export default function App() {
                         <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
                         <XAxis dataKey="month" stroke={chartColors.axis} fontSize={11} />
                         <YAxis stroke={chartColors.axis} fontSize={11} />
-                        <Tooltip contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px' }} itemStyle={{ color: chartColors.tooltipText }} labelStyle={{ color: chartColors.tooltipText }} formatter={(v) => `€${v}`} />
+                        <Tooltip contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px' }} itemStyle={{ color: chartColors.tooltipText }} labelStyle={{ color: chartColors.tooltipText }} formatter={(v) => units.money(v)} />
                         <Legend />
-                        <Bar dataKey="electricCost" name="Electric (€)" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="petrolCost" name="Petrol (€)" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="electricCost" name={`Electric (${units.currSymbol})`} fill="#22c55e" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="petrolCost" name={`Petrol (${units.currSymbol})`} fill="#ef4444" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </ChartCard>
@@ -1915,8 +2275,8 @@ export default function App() {
                         <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
                         <XAxis dataKey="month" stroke={chartColors.axis} fontSize={11} />
                         <YAxis stroke={chartColors.axis} fontSize={11} />
-                        <Tooltip contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px' }} itemStyle={{ color: chartColors.tooltipText }} labelStyle={{ color: chartColors.tooltipText }} formatter={(v) => `€${v}`} />
-                        <Area type="monotone" dataKey="cumulative" name="Saved (€)" stroke="#f59e0b" fill="#f59e0b44" strokeWidth={2} />
+                        <Tooltip contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px' }} itemStyle={{ color: chartColors.tooltipText }} labelStyle={{ color: chartColors.tooltipText }} formatter={(v) => units.money(v)} />
+                        <Area type="monotone" dataKey="cumulative" name={`Saved (${units.currSymbol})`} stroke="#f59e0b" fill="#f59e0b44" strokeWidth={2} />
                       </AreaChart>
                     </ResponsiveContainer>
                   </ChartCard>
@@ -1948,12 +2308,12 @@ export default function App() {
                     <div className={`p-3 rounded-xl ${darkMode ? 'bg-zinc-900/50' : 'bg-white/70'}`}>
                       <p className="text-xs text-zinc-500">Your Emissions</p>
                       <p className={`text-lg font-bold ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>{environmental.co2Electric} kg</p>
-                      <p className="text-xs text-zinc-500">{environmental.co2PerKmElectric} g/km</p>
+                      <p className="text-xs text-zinc-500">{unitSystem === 'metric' ? environmental.co2PerKmElectric : precise.round(environmental.co2PerKmElectric * MI_TO_KM, 1)} g/{units.distUnit}</p>
                     </div>
                     <div className={`p-3 rounded-xl ${darkMode ? 'bg-zinc-900/50' : 'bg-white/70'}`}>
                       <p className="text-xs text-zinc-500">Petrol Would Be</p>
                       <p className={`text-lg font-bold ${darkMode ? 'text-red-400' : 'text-red-600'}`}>{environmental.co2Petrol} kg</p>
-                      <p className="text-xs text-zinc-500">{environmental.co2PerKmPetrol} g/km</p>
+                      <p className="text-xs text-zinc-500">{unitSystem === 'metric' ? environmental.co2PerKmPetrol : precise.round(environmental.co2PerKmPetrol * MI_TO_KM, 1)} g/{units.distUnit}</p>
                     </div>
                     <div className={`p-3 rounded-xl ${darkMode ? 'bg-zinc-900/50' : 'bg-white/70'}`}>
                       <p className="text-xs text-zinc-500">Reduction</p>
@@ -1962,7 +2322,7 @@ export default function App() {
                     </div>
                     <div className={`p-3 rounded-xl ${darkMode ? 'bg-zinc-900/50' : 'bg-white/70'}`}>
                       <p className="text-xs text-zinc-500">Fuel Avoided</p>
-                      <p className={`text-lg font-bold ${darkMode ? 'text-amber-400' : 'text-amber-600'}`}>{environmental.litersAvoided} L</p>
+                      <p className={`text-lg font-bold ${darkMode ? 'text-amber-400' : 'text-amber-600'}`}>{units.vol(environmental.litersAvoided).formatted}</p>
                       <p className="text-xs text-zinc-500">of petrol</p>
                     </div>
                   </div>
@@ -1971,8 +2331,8 @@ export default function App() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <StatCard darkMode={darkMode} label="CO₂ Saved" value={`${environmental.co2SavedKg} kg`} subtitle={`${environmental.co2SavedTons} tons`} color="emerald" />
                   <StatCard darkMode={darkMode} label="Trees Equivalent" value={environmental.treesEquivalent} subtitle="trees/year" color="teal" />
-                  <StatCard darkMode={darkMode} label="Your Emissions" value={`${environmental.co2PerKmElectric} g/km`} subtitle="electric grid" color="blue" />
-                  <StatCard darkMode={darkMode} label="Avoided" value={`${environmental.co2PerKmPetrol} g/km`} subtitle="if petrol" color="red" />
+                  <StatCard darkMode={darkMode} label="Your Emissions" value={`${unitSystem === 'metric' ? environmental.co2PerKmElectric : precise.round(environmental.co2PerKmElectric * MI_TO_KM, 1)} g/${units.distUnit}`} subtitle="electric grid" color="blue" />
+                  <StatCard darkMode={darkMode} label="Avoided" value={`${unitSystem === 'metric' ? environmental.co2PerKmPetrol : precise.round(environmental.co2PerKmPetrol * MI_TO_KM, 1)} g/${units.distUnit}`} subtitle="if petrol" color="red" />
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -2023,11 +2383,11 @@ export default function App() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div className={`${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
                       <p className="mb-2"><strong className={darkMode ? 'text-emerald-400' : 'text-emerald-600'}>Grid emissions:</strong> Portugal's electricity grid produces ~164g CO₂/kWh, one of the cleaner grids in Europe thanks to renewables.</p>
-                      <p><strong className={darkMode ? 'text-amber-400' : 'text-amber-600'}>Petrol baseline:</strong> We compare against a typical premium car consuming {petrolConsumption}L/100km, producing ~2.31kg CO₂ per liter burned.</p>
+                      <p><strong className={darkMode ? 'text-amber-400' : 'text-amber-600'}>Petrol baseline:</strong> We compare against a typical premium car consuming {units.fuelCons(petrolConsumption).formatted}, producing ~2.31kg CO₂ per liter burned.</p>
                     </div>
                     <div className={`${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
                       <p className="mb-2"><strong className={darkMode ? 'text-blue-400' : 'text-blue-600'}>Tree absorption:</strong> A mature tree absorbs about 21kg of CO₂ per year. Your savings equal {environmental.treesEquivalent} trees working for a full year!</p>
-                      <p><strong className={darkMode ? 'text-teal-400' : 'text-teal-600'}>Real impact:</strong> By driving electric, you've prevented {environmental.litersAvoided}L of petrol from being burned.</p>
+                      <p><strong className={darkMode ? 'text-teal-400' : 'text-teal-600'}>Real impact:</strong> By driving electric, you've prevented {units.vol(environmental.litersAvoided).formatted} of petrol from being burned.</p>
                     </div>
                   </div>
                 </div>
@@ -2047,10 +2407,10 @@ export default function App() {
                     </div>
                     <div>
                       <h2 className={`text-2xl font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                        {batteryAnalysis.realWorldRange} km Real-World Range
+                        {units.dist(batteryAnalysis.realWorldRange).formatted} Real-World Range
                       </h2>
                       <p className={`${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
-                        {batteryAnalysis.rangeEfficiency}% of WLTP rated {batteryAnalysis.officialRange} km
+                        {batteryAnalysis.rangeEfficiency}% of WLTP rated {units.dist(batteryAnalysis.officialRange).formatted}
                       </p>
                     </div>
                   </div>
@@ -2066,8 +2426,8 @@ export default function App() {
                       <p className="text-xs text-zinc-500">theoretical max</p>
                     </div>
                     <div className={`p-3 rounded-xl ${darkMode ? 'bg-zinc-900/50' : 'bg-white/70'}`}>
-                      <p className="text-xs text-zinc-500">Km/Charge Cycle</p>
-                      <p className={`text-lg font-bold ${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>{batteryAnalysis.distancePerCharge}</p>
+                      <p className="text-xs text-zinc-500">{units.distUnit}/Charge Cycle</p>
+                      <p className={`text-lg font-bold ${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>{units.dist(batteryAnalysis.distancePerCharge).value}</p>
                       <p className="text-xs text-zinc-500">actual average</p>
                     </div>
                     <div className={`p-3 rounded-xl ${darkMode ? 'bg-zinc-900/50' : 'bg-white/70'}`}>
@@ -2081,8 +2441,8 @@ export default function App() {
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <StatCard darkMode={darkMode} label="Best Month" value={`${batteryAnalysis.bestMonth} kWh`} subtitle="lowest consumption" color="emerald" />
-                  <StatCard darkMode={darkMode} label="Worst Month" value={`${batteryAnalysis.worstMonth} kWh`} subtitle="highest consumption" color="red" />
+                  <StatCard darkMode={darkMode} label="Best Month" value={units.elecCons(batteryAnalysis.bestMonth).formatted} subtitle="lowest consumption" color="emerald" />
+                  <StatCard darkMode={darkMode} label="Worst Month" value={units.elecCons(batteryAnalysis.worstMonth).formatted} subtitle="highest consumption" color="red" />
                   <StatCard darkMode={darkMode} label="Seasonal Swing" value={`+${batteryAnalysis.seasonalVariation}%`} subtitle="winter vs summer" color="sky" />
                   <StatCard darkMode={darkMode} label="Battery Cycles" value={chargingOptimization?.batteryFullCycles || 0} subtitle="equivalent full" color="purple" />
                 </div>
@@ -2090,14 +2450,14 @@ export default function App() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                   <ChartCard darkMode={darkMode} title="Monthly Consumption Trend">
                     <ResponsiveContainer width="100%" height={260}>
-                      <ComposedChart data={data.monthlyData}>
+                      <ComposedChart data={data.monthlyData.map(m => ({ ...m, consumption: units.elecCons(m.consumption).value }))}>
                         <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
                         <XAxis dataKey="month" stroke={chartColors.axis} fontSize={11} />
-                        <YAxis stroke={chartColors.axis} fontSize={11} domain={[20, 32]} />
+                        <YAxis stroke={chartColors.axis} fontSize={11} domain={elecConsDomain} />
                         <Tooltip contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px' }} itemStyle={{ color: chartColors.tooltipText }} labelStyle={{ color: chartColors.tooltipText }} />
                         <Legend />
-                        <Area type="monotone" dataKey="consumption" name="kWh/100km" stroke="#8b5cf6" fill="#8b5cf644" strokeWidth={2} />
-                        <Line type="monotone" dataKey={() => TAYCAN_SPECS.officialConsumption} name="WLTP" stroke="#22c55e" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                        <Area type="monotone" dataKey="consumption" name={units.elecConsUnit} stroke="#8b5cf6" fill="#8b5cf644" strokeWidth={2} />
+                        <Line type="monotone" dataKey={() => units.elecCons(TAYCAN_SPECS.officialConsumption).value} name="WLTP" stroke="#22c55e" strokeWidth={2} strokeDasharray="5 5" dot={false} />
                       </ComposedChart>
                     </ResponsiveContainer>
                   </ChartCard>
@@ -2105,11 +2465,11 @@ export default function App() {
                   {benchmarks && (
                     <ChartCard darkMode={darkMode} title="EV Comparison">
                       <ResponsiveContainer width="100%" height={260}>
-                        <BarChart data={benchmarks.competitors} layout="vertical">
+                        <BarChart data={benchmarks.competitors.map(c => ({ ...c, consumption: units.elecCons(c.consumption).value }))} layout="vertical">
                           <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
-                          <XAxis type="number" stroke={chartColors.axis} fontSize={11} domain={[15, 30]} />
+                          <XAxis type="number" stroke={chartColors.axis} fontSize={11} domain={elecConsDomain} />
                           <YAxis dataKey="name" type="category" stroke={chartColors.axis} fontSize={10} width={80} />
-                          <Tooltip contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px' }} itemStyle={{ color: chartColors.tooltipText }} labelStyle={{ color: chartColors.tooltipText }} formatter={(v) => `${v} kWh/100km`} />
+                          <Tooltip contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px' }} itemStyle={{ color: chartColors.tooltipText }} labelStyle={{ color: chartColors.tooltipText }} formatter={(v) => `${v} ${units.elecConsUnit}`} />
                           <Bar dataKey="consumption" name="Consumption" radius={[0, 4, 4, 0]}>
                             {benchmarks.competitors.map((entry, i) => (
                               <Cell key={`cell-${i}`} fill={i === 0 ? '#f59e0b' : '#3b82f644'} />
@@ -2145,7 +2505,7 @@ export default function App() {
                     </div>
                     <div className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-emerald-50 border-emerald-200'} border`}>
                       <p className={`text-sm ${darkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>
-                        <span className="inline-flex items-center gap-1"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" /></svg><strong>Off-peak charging tip:</strong></span> If you charge during off-peak hours (typically 30% cheaper), you could save an additional <strong>€{chargingOptimization.potentialOffPeakSavings}</strong> on your electricity bill.
+                        <span className="inline-flex items-center gap-1"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" /></svg><strong>Off-peak charging tip:</strong></span> If you charge during off-peak hours (typically 30% cheaper), you could save an additional <strong>{units.money(chargingOptimization.potentialOffPeakSavings)}</strong> on your electricity bill.
                       </p>
                     </div>
                   </div>
@@ -2220,7 +2580,7 @@ export default function App() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div className={`p-3 rounded-xl ${darkMode ? 'bg-zinc-800/50' : 'bg-zinc-50'}`}>
                       <p className="text-xs text-zinc-500">Annual Distance</p>
-                      <p className={`text-xl font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{predictions.annualDistance.toLocaleString()} km</p>
+                      <p className={`text-xl font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{units.dist(predictions.annualDistance).formatted}</p>
                       <p className="text-xs text-zinc-500">projected</p>
                     </div>
                     <div className={`p-3 rounded-xl ${darkMode ? 'bg-zinc-800/50' : 'bg-zinc-50'}`}>
@@ -2235,28 +2595,28 @@ export default function App() {
                     </div>
                     <div className={`p-3 rounded-xl ${darkMode ? 'bg-zinc-800/50' : 'bg-zinc-50'}`}>
                       <p className="text-xs text-zinc-500">Annual Savings</p>
-                      <p className={`text-xl font-bold ${darkMode ? 'text-amber-400' : 'text-amber-600'}`}>€{predictions.annualSavings}</p>
+                      <p className={`text-xl font-bold ${darkMode ? 'text-amber-400' : 'text-amber-600'}`}>{units.money(predictions.annualSavings)}</p>
                       <p className="text-xs text-zinc-500">vs petrol</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className={`p-4 rounded-xl border ${darkMode ? 'bg-gradient-to-br from-emerald-500/5 to-teal-500/5 border-emerald-500/20' : 'bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200'}`}>
                       <p className={`text-sm font-medium ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>5-Year Savings</p>
-                      <p className={`text-3xl font-bold ${darkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>€{predictions.fiveYearSavings.toLocaleString()}</p>
-                      <p className="text-xs text-zinc-500">{predictions.fiveYearDistance.toLocaleString()} km over 5 years</p>
+                      <p className={`text-3xl font-bold ${darkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>{units.money(predictions.fiveYearSavings)}</p>
+                      <p className="text-xs text-zinc-500">{units.dist(predictions.fiveYearDistance).formatted} over 5 years</p>
                     </div>
                     <div className={`p-4 rounded-xl border ${darkMode ? 'bg-gradient-to-br from-blue-500/5 to-cyan-500/5 border-blue-500/20' : 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200'}`}>
                       <p className={`text-sm font-medium ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>Next Month Forecast</p>
-                      <p className={`text-3xl font-bold ${darkMode ? 'text-blue-300' : 'text-blue-700'}`}>{predictions.nextMonthDistance} km</p>
+                      <p className={`text-3xl font-bold ${darkMode ? 'text-blue-300' : 'text-blue-700'}`}>{units.dist(predictions.nextMonthDistance).formatted}</p>
                       <p className="text-xs text-zinc-500">~{predictions.nextMonthTrips} trips expected</p>
                     </div>
                     <div className={`p-4 rounded-xl border ${darkMode ? 'bg-gradient-to-br from-sky-500/5 to-blue-500/5 border-sky-500/20' : 'bg-gradient-to-br from-sky-50 to-blue-50 border-sky-200'}`}>
                       <p className={`text-sm font-medium ${darkMode ? 'text-sky-400' : 'text-sky-600'}`}>Seasonal Prediction</p>
                       <p className={`text-lg font-bold ${darkMode ? 'text-sky-300' : 'text-sky-700'}`}>
-                        Summer: {predictions.avgSummerConsumption} kWh
+                        Summer: {units.elecCons(predictions.avgSummerConsumption).formatted}
                       </p>
                       <p className={`text-lg font-bold ${darkMode ? 'text-blue-300' : 'text-blue-700'}`}>
-                        Winter: {predictions.avgWinterConsumption} kWh
+                        Winter: {units.elecCons(predictions.avgWinterConsumption).formatted}
                       </p>
                     </div>
                   </div>
@@ -2273,14 +2633,14 @@ export default function App() {
                       <ul className={`text-sm space-y-1 ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
                         <li>• Charge to 80% for daily use, 100% only for long trips</li>
                         <li>• Pre-condition while plugged in to save battery</li>
-                        <li>• Use off-peak hours to save ~€{chargingOptimization?.potentialOffPeakSavings || 0}</li>
+                        <li>• Use off-peak hours to save ~{units.money(chargingOptimization?.potentialOffPeakSavings || 0)}</li>
                       </ul>
                     </div>
                     <div className={`p-3 rounded-lg ${darkMode ? 'bg-zinc-800/50' : 'bg-zinc-50'}`}>
                       <h4 className={`font-medium mb-2 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}><span className="inline-flex items-center gap-2"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2 14.5h1.5M20.5 14.5H22M5.5 17a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM18.5 17a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M4 14.5h16M7 14.5V13c0-.5.5-1.5 1-2l2-2.5c.5-.5 1.5-1 2.5-1h3c1 0 1.8.3 2.2.7l1.8 1.8c.5.5 1 1.5 1 2.5v2M7 14.5c0-1-.5-2-1.5-2H4c-.5 0-1 .5-1 1v1.5" /></svg>Improve Efficiency</span></h4>
                       <ul className={`text-sm space-y-1 ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
                         <li>• Combine short trips when possible</li>
-                        <li>• Optimal speed: 50-70 km/h for best efficiency</li>
+                        <li>• Optimal speed: {unitSystem === 'metric' ? '50-70 km/h' : '30-45 mph'} for best efficiency</li>
                         <li>• Use eco mode in city, normal on highway</li>
                       </ul>
                     </div>
@@ -2295,7 +2655,7 @@ export default function App() {
                     <div className={`p-3 rounded-lg ${darkMode ? 'bg-zinc-800/50' : 'bg-zinc-50'}`}>
                       <h4 className={`font-medium mb-2 ${darkMode ? 'text-amber-400' : 'text-amber-600'}`}><span className="inline-flex items-center gap-2"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>Track Progress</span></h4>
                       <ul className={`text-sm space-y-1 ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
-                        <li>• Target: {Math.round(data.summary.avgConsumption * 0.95)} kWh/100km (5% improvement)</li>
+                        <li>• Target: {units.elecCons(Math.round(data.summary.avgConsumption * 0.95)).formatted} (5% improvement)</li>
                         <li>• Review monthly to spot trends</li>
                         <li>• Compare seasons for context</li>
                       </ul>

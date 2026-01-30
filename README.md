@@ -40,6 +40,36 @@ Porsche's My Porsche app lets you export trip data as CSV files, but analyzing t
 | **Environmental Impact** | CO2 savings compared to combustion vehicles |
 | **Battery Insights** | Charging patterns and battery usage statistics |
 | **Smart Insights** | AI-generated observations about your driving habits |
+| **Flexible Units** | Support for Metric, Imperial (UK), and Imperial (US) units |
+
+## Units & Currency Settings
+
+The app supports multiple unit systems and currencies to match your preferences:
+
+### Unit Systems
+
+| Setting | Metric | Imperial (UK) | Imperial (US) |
+|---------|--------|---------------|---------------|
+| Distance | km | mi | mi |
+| Speed | km/h | mph | mph |
+| Volume | L | gal (UK) | gal (US) |
+| Default Currency | EUR (€) | GBP (£) | USD ($) |
+
+### Consumption Formats
+
+**Electric Consumption:**
+- Metric: `kWh/100km` or `km/kWh`
+- Imperial: `mi/kWh`, `kWh/mi`, or `kWh/100mi`
+
+**Fuel Consumption (for comparison):**
+- Metric: `L/100km` or `km/L`
+- Imperial: `mpg`
+
+### Supported Currencies
+
+EUR, USD, GBP, CHF, CAD, AUD, JPY, CNY, SEK, NOK
+
+All data is imported from Porsche in metric units and automatically converted based on your selected unit system.
 
 ## Screenshots
 
