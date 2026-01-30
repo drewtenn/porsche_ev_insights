@@ -633,6 +633,7 @@ export default function App() {
   const [modalConfig, setModalConfig] = useState(null);
   const [timeView, setTimeView] = useState('month'); // 'day', 'week', 'month'
   const [menuOpen, setMenuOpen] = useState(false);
+  const [vehicleModel, setVehicleModel] = useState(null); // Extracted from CSV filename (e.g., "Taycan 4 Cross Turismo", "Macan 4")
   const [darkMode, setDarkMode] = useState(() => {
     const saved = safeStorage.get('taycan_theme');
     return saved !== null ? saved : true; // Default to dark mode
@@ -647,7 +648,9 @@ export default function App() {
   useEffect(() => {
     const savedData = safeStorage.get(STORAGE_KEYS.DATA);
     const savedSettings = safeStorage.get(STORAGE_KEYS.SETTINGS);
+    const savedModel = safeStorage.get('porsche_vehicle_model');
     if (savedData) setAppData(savedData);
+    if (savedModel) setVehicleModel(savedModel);
     if (savedSettings) {
       setElectricityPrice(savedSettings.electricityPrice ?? 0.25);
       setPetrolPrice(savedSettings.petrolPrice ?? 1.80);
@@ -761,6 +764,21 @@ export default function App() {
       currSymbol: curr.symbol
     };
   }, [unitSystem, currency, elecConsFormat, fuelConsFormat]);
+
+  // Personalized vehicle name for UI display
+  const vehicleDisplayName = useMemo(() => {
+    // Format: "Your Taycan", "Your Macan", "Your Cayenne", etc.
+    // Extract base model (Taycan, Macan, Cayenne) for shorter display in some contexts
+    const model = vehicleModel || 'Porsche';
+    const baseModel = model.split(' ')[0]; // e.g., "Taycan" from "Taycan 4 Cross Turismo"
+    return {
+      full: `Your ${model}`,                  // "Your Taycan 4 Cross Turismo" or "Your Porsche"
+      short: `Your ${baseModel}`,             // "Your Taycan" or "Your Porsche"
+      modelFull: model,                       // "Taycan 4 Cross Turismo" or "Porsche"
+      modelShort: baseModel,                  // "Taycan" or "Porsche"
+      avgLabel: `${baseModel} Avg`            // "Taycan Avg" or "Porsche Avg" for comparison table
+    };
+  }, [vehicleModel]);
 
   // Trip type labels with converted distances
   const tripTypeLabels = useMemo(() => {
@@ -1166,9 +1184,13 @@ export default function App() {
       : 0;
 
     // EV comparison (approximate competitors)
+    // Use personalized vehicle name if available
+    const yourVehicleName = vehicleDisplayName?.short || 'Your Porsche';
+    const avgVehicleName = vehicleDisplayName?.avgLabel || 'Porsche Avg';
+
     const competitors = [
-      { name: 'Your Taycan', consumption: data.summary.avgConsumption, range: batteryAnalysis?.realWorldRange || 0 },
-      { name: 'Taycan Avg', consumption: 26.5, range: 316 },
+      { name: yourVehicleName, consumption: data.summary.avgConsumption, range: batteryAnalysis?.realWorldRange || 0 },
+      { name: avgVehicleName, consumption: 26.5, range: 316 },
       { name: 'Model S', consumption: 18.5, range: 420 },
       { name: 'EQS', consumption: 20.5, range: 400 },
       { name: 'BMW i7', consumption: 22.0, range: 380 }
@@ -1180,11 +1202,12 @@ export default function App() {
       shortTripPenalty,
       microTripRatio,
       competitors,
+      avgVehicleName, // For use in other UI text
       drivingProfile: data.summary.avgTripDistance < 15 ? 'Urban Commuter'
         : data.summary.avgTripDistance < 30 ? 'Mixed Use'
         : 'Highway Cruiser'
     };
-  }, [data, batteryAnalysis]);
+  }, [data, batteryAnalysis, vehicleDisplayName]);
 
   // ========== DRIVING INSIGHTS ==========
   const drivingInsights = useMemo(() => {
@@ -1304,18 +1327,33 @@ export default function App() {
     };
   }, [data, unitSystem, units, speedRangeLabels]);
 
+  // Extract Porsche model from CSV filename
+  // Format: "Model Name-<language specific text>-YYYY-MM-DD_HH-MM.csv"
+  // Examples: "Taycan 4 Cross Turismo-Since start-2026-01-30_08-45.csv"
+  //           "Macan Electric-Desde o arranque-2026-01-29_14-54.csv"
+  const extractVehicleModel = useCallback((filename) => {
+    // Match: Model name (first segment before dash), then anything, then date pattern at end
+    // The model is everything before the first dash that's followed by more content and a date
+    const match = filename.match(/^(.+?)-[^-]+-\d{4}-\d{2}-\d{2}/);
+    if (match) {
+      return match[1].trim();
+    }
+    return null;
+  }, []);
+
   const handleFileUpload = useCallback((file, type) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
         const parsed = parseCSV(e.target.result);
-        setUploadStatus(prev => ({ ...prev, [type]: { name: file.name, rows: parsed.length, data: parsed } }));
+        const model = extractVehicleModel(file.name);
+        setUploadStatus(prev => ({ ...prev, [type]: { name: file.name, rows: parsed.length, data: parsed, model } }));
       } catch (err) {
         setModalConfig({ title: 'Error', message: 'Error parsing file: ' + err.message, variant: 'danger' });
       }
     };
     reader.readAsText(file);
-  }, []);
+  }, [extractVehicleModel]);
 
   const processUploadedFiles = useCallback(() => {
     if (!uploadStatus.start?.data) {
@@ -1325,20 +1363,28 @@ export default function App() {
     const processed = processUploadedData(uploadStatus.start.data, uploadStatus.charge?.data || []);
     setAppData(processed);
     safeStorage.set(STORAGE_KEYS.DATA, processed);
+    // Extract vehicle model from filename (prefer "Since start" file, fallback to "Since charge")
+    const model = uploadStatus.start?.model || uploadStatus.charge?.model || null;
+    if (model) {
+      setVehicleModel(model);
+      safeStorage.set('porsche_vehicle_model', model);
+    }
     setShowUpload(false);
     setUploadStatus({ start: null, charge: null });
   }, [uploadStatus]);
 
   const handleBackup = useCallback(() => {
     try {
-      const backup = { version: 1, timestamp: new Date().toISOString(), data: appData, settings: { electricityPrice, petrolPrice, petrolConsumption, unitSystem, currency, fuelConsFormat, elecConsFormat } };
+      const backup = { version: 1, timestamp: new Date().toISOString(), data: appData, vehicleModel, settings: { electricityPrice, petrolPrice, petrolConsumption, unitSystem, currency, fuelConsFormat, elecConsFormat } };
 
-      const filename = `taycan-backup-${new Date().toISOString().split('T')[0]}.json`;
+      // Use model name in backup filename if available
+      const modelSlug = vehicleModel ? vehicleModel.toLowerCase().replace(/\s+/g, '-') : 'porsche';
+      const filename = `${modelSlug}-backup-${new Date().toISOString().split('T')[0]}.json`;
       downloadFile(JSON.stringify(backup, null, 2), filename);
     } catch (err) {
       setModalConfig({ title: 'Export Error', message: 'Failed to create backup: ' + err.message, variant: 'danger' });
     }
-  }, [appData, electricityPrice, petrolPrice, petrolConsumption, unitSystem, currency, fuelConsFormat, elecConsFormat]);
+  }, [appData, vehicleModel, electricityPrice, petrolPrice, petrolConsumption, unitSystem, currency, fuelConsFormat, elecConsFormat]);
 
   const handleRestore = useCallback((file) => {
     const reader = new FileReader();
@@ -1346,6 +1392,7 @@ export default function App() {
       try {
         const backup = JSON.parse(e.target.result);
         if (backup.data) { setAppData(backup.data); safeStorage.set(STORAGE_KEYS.DATA, backup.data); }
+        if (backup.vehicleModel) { setVehicleModel(backup.vehicleModel); safeStorage.set('porsche_vehicle_model', backup.vehicleModel); }
         if (backup.settings) {
           setElectricityPrice(backup.settings.electricityPrice ?? 0.25);
           setPetrolPrice(backup.settings.petrolPrice ?? 1.80);
@@ -1374,7 +1421,9 @@ export default function App() {
       onConfirm: () => {
         setAppData(null);
         setUseSampleData(false);
+        setVehicleModel(null);
         safeStorage.remove(STORAGE_KEYS.DATA);
+        safeStorage.remove('porsche_vehicle_model');
         setShowSettings(false);
       }
     });
@@ -2561,7 +2610,7 @@ export default function App() {
                       </div>
                     </div>
                     <div className={`px-4 py-2 rounded-full ${benchmarks.vsAvgTaycan <= 0 ? (darkMode ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-700') : (darkMode ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700')}`}>
-                      {benchmarks.vsAvgTaycan <= 0 ? `${Math.abs(benchmarks.vsAvgTaycan)}% better` : `${benchmarks.vsAvgTaycan}% higher`} than avg Taycan
+                      {benchmarks.vsAvgTaycan <= 0 ? `${Math.abs(benchmarks.vsAvgTaycan)}% better` : `${benchmarks.vsAvgTaycan}% higher`} than {benchmarks.avgVehicleName || 'avg Porsche'}
                     </div>
                   </div>
                 </div>
