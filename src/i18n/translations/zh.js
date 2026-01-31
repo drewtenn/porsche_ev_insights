@@ -79,13 +79,25 @@ export const zh = {
   // Upload modal
   upload: {
     title: '上传保时捷数据',
+    mergeTitle: '添加更多数据',
     sinceStart: '自启动以来',
     sinceStartDesc: '单次行程',
     sinceCharge: '自充电以来',
     sinceChargeDesc: '充电周期',
     processButton: '处理数据',
+    mergeButton: '合并数据',
     tripsCount: '{count}次行程',
-    cyclesCount: '{count}个周期'
+    cyclesCount: '{count}个周期',
+    modeReplace: '替换',
+    modeMerge: '合并',
+    replaceDesc: '用新文件替换所有现有数据',
+    mergeDesc: '将新行程添加到现有数据（重复项将被跳过）',
+    mergeComplete: '数据合并成功',
+    mergeStats: '已添加{new}次新行程（跳过{duplicates}个重复项）。总计：{total}次行程。',
+    mergeUnavailable: '合并不可用',
+    mergeUnavailableDesc: '您的数据是在添加合并支持之前导入的。这次请使用替换。以后的导入将支持合并。',
+    missingFile: '缺少文件',
+    missingFileDesc: '请上传"自启动以来"文件以继续。'
   },
 
   // Settings page

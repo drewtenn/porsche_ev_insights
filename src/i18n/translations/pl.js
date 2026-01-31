@@ -79,13 +79,25 @@ export const pl = {
   // Upload modal
   upload: {
     title: 'Prześlij dane Porsche',
+    mergeTitle: 'Dodaj więcej danych',
     sinceStart: 'Od startu',
     sinceStartDesc: 'Pojedyncze podróże',
     sinceCharge: 'Od ładowania',
     sinceChargeDesc: 'Cykle ładowania',
     processButton: 'Przetwarzaj dane',
+    mergeButton: 'Połącz dane',
     tripsCount: '{count} podróży',
-    cyclesCount: '{count} cykli'
+    cyclesCount: '{count} cykli',
+    modeReplace: 'Zastąp',
+    modeMerge: 'Połącz',
+    replaceDesc: 'Zastąp wszystkie istniejące dane nowymi plikami',
+    mergeDesc: 'Dodaj nowe podróże do istniejących danych (duplikaty zostaną pominięte)',
+    mergeComplete: 'Dane połączone pomyślnie',
+    mergeStats: 'Dodano {new} nowych podróży ({duplicates} duplikatów pominięto). Łącznie: {total} podróży.',
+    mergeUnavailable: 'Łączenie niedostępne',
+    mergeUnavailableDesc: 'Twoje dane zostały zaimportowane przed dodaniem obsługi łączenia. Użyj tym razem Zastąp. Przyszłe importy będą obsługiwać łączenie.',
+    missingFile: 'Brak pliku',
+    missingFileDesc: 'Prześlij plik "Od startu" aby kontynuować.'
   },
 
   // Settings page

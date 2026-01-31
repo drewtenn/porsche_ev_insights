@@ -79,13 +79,25 @@ export const fr = {
   // Upload modal
   upload: {
     title: 'Télécharger les données Porsche',
+    mergeTitle: 'Ajouter des données',
     sinceStart: 'Depuis le début',
     sinceStartDesc: 'Trajets individuels',
     sinceCharge: 'Depuis la charge',
     sinceChargeDesc: 'Cycles de charge',
     processButton: 'Traiter les données',
+    mergeButton: 'Fusionner les données',
     tripsCount: '{count} trajets',
-    cyclesCount: '{count} cycles'
+    cyclesCount: '{count} cycles',
+    modeReplace: 'Remplacer',
+    modeMerge: 'Fusionner',
+    replaceDesc: 'Remplacer toutes les données existantes par de nouveaux fichiers',
+    mergeDesc: 'Ajouter de nouveaux trajets aux données existantes (les doublons seront ignorés)',
+    mergeComplete: 'Données fusionnées avec succès',
+    mergeStats: '{new} nouveaux trajets ajoutés ({duplicates} doublons ignorés). Total: {total} trajets.',
+    mergeUnavailable: 'Fusion non disponible',
+    mergeUnavailableDesc: 'Vos données ont été importées avant l\'ajout du support de fusion. Veuillez utiliser Remplacer cette fois. Les importations futures supporteront la fusion.',
+    missingFile: 'Fichier manquant',
+    missingFileDesc: 'Veuillez télécharger le fichier "Depuis le début" pour continuer.'
   },
 
   // Settings page

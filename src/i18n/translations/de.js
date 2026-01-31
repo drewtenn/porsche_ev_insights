@@ -79,13 +79,25 @@ export const de = {
   // Upload modal
   upload: {
     title: 'Porsche-Daten hochladen',
+    mergeTitle: 'Weitere Daten hinzufügen',
     sinceStart: 'Seit Start',
     sinceStartDesc: 'Einzelne Fahrten',
     sinceCharge: 'Seit Ladung',
     sinceChargeDesc: 'Ladezyklen',
     processButton: 'Daten verarbeiten',
+    mergeButton: 'Daten zusammenführen',
     tripsCount: '{count} Fahrten',
-    cyclesCount: '{count} Zyklen'
+    cyclesCount: '{count} Zyklen',
+    modeReplace: 'Ersetzen',
+    modeMerge: 'Zusammenführen',
+    replaceDesc: 'Alle vorhandenen Daten durch neue Dateien ersetzen',
+    mergeDesc: 'Neue Fahrten zu vorhandenen Daten hinzufügen (Duplikate werden übersprungen)',
+    mergeComplete: 'Daten erfolgreich zusammengeführt',
+    mergeStats: '{new} neue Fahrten hinzugefügt ({duplicates} Duplikate übersprungen). Gesamt: {total} Fahrten.',
+    mergeUnavailable: 'Zusammenführung nicht verfügbar',
+    mergeUnavailableDesc: 'Ihre Daten wurden importiert, bevor die Zusammenführung unterstützt wurde. Bitte verwenden Sie diesmal Ersetzen. Künftige Importe werden Zusammenführen unterstützen.',
+    missingFile: 'Datei fehlt',
+    missingFileDesc: 'Bitte laden Sie die "Seit Start"-Datei hoch, um fortzufahren.'
   },
 
   // Settings page

@@ -79,13 +79,25 @@ export const pt = {
   // Upload modal
   upload: {
     title: 'Carregar Dados Porsche',
+    mergeTitle: 'Adicionar Mais Dados',
     sinceStart: 'Desde o Início',
     sinceStartDesc: 'Viagens individuais',
     sinceCharge: 'Desde o Carregamento',
     sinceChargeDesc: 'Ciclos de carga',
     processButton: 'Processar Dados',
+    mergeButton: 'Juntar Dados',
     tripsCount: '{count} viagens',
-    cyclesCount: '{count} ciclos'
+    cyclesCount: '{count} ciclos',
+    modeReplace: 'Substituir',
+    modeMerge: 'Juntar',
+    replaceDesc: 'Substituir todos os dados existentes pelos novos ficheiros',
+    mergeDesc: 'Adicionar novas viagens aos dados existentes (duplicados serão ignorados)',
+    mergeComplete: 'Dados Juntados com Sucesso',
+    mergeStats: 'Adicionadas {new} novas viagens ({duplicates} duplicados ignorados). Total: {total} viagens.',
+    mergeUnavailable: 'Junção Não Disponível',
+    mergeUnavailableDesc: 'Os seus dados foram importados antes do suporte de junção ser adicionado. Por favor use Substituir desta vez. Futuras importações suportarão junção.',
+    missingFile: 'Ficheiro em Falta',
+    missingFileDesc: 'Por favor carregue o ficheiro "Desde o Início" para continuar.'
   },
 
   // Settings page

@@ -40,6 +40,7 @@ I felt the Porsche app lacks the deeper insights that can be extracted from the 
 | **Environmental Impact** | CO2 savings compared to combustion vehicles |
 | **Battery Insights** | Charging patterns and battery usage statistics |
 | **Smart Insights** | AI-generated observations about your driving habits |
+| **Data Merge** | Import new CSV exports and merge with existing data (no duplicates) |
 | **Vehicle Selection** | Choose from 50 Porsche EV models with accurate WLTP specs |
 | **EV Comparison** | Compare your real-world consumption vs WLTP and other EVs |
 | **Flexible Units** | Support for Metric, Imperial (UK), and Imperial (US) units |
@@ -173,6 +174,18 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 The app supports both **"Since Start"** and **"Since Charge"** CSV exports (maximum 12 months limited by Porsche Connect). Uploading both files provides richer stats and information.
 
+### Merging New Data
+
+Since Porsche Connect only allows exporting the last 12 months of data, you may need to merge newer exports with your existing data:
+
+1. Export fresh CSV files from My Porsche app
+2. Open Porsche EV Insights with your existing data loaded (or restore a backup first)
+3. Click **Import Data** and select **Merge** mode (instead of Replace)
+4. Upload the new CSV files
+5. The app will automatically detect and skip duplicate trips, adding only new ones
+
+This way you can build up a complete history beyond the 12-month limit. Merging also works after restoring a backup, so you can keep a backup file and periodically merge new data into it.
+
 ## Tech Stack
 
 | Technology | Purpose |
@@ -201,6 +214,14 @@ Contributions are welcome! Feel free to:
 - Submit pull requests
 
 ## Release History
+
+### v1.3.0-beta (January 2026)
+- **Data Merge**: Import new CSV files on top of existing data without duplicates
+- **Smart Deduplication**: Trips are fingerprinted by date, distance, and consumption to detect duplicates
+- **Replace/Merge Toggle**: Choose between replacing all data or merging with existing
+- **Merge Statistics**: See how many new trips were added vs duplicates skipped
+- **Backup Compatibility**: Merge works with restored backups (raw data is reconstructed automatically)
+- **Timestamped Backups**: Backup filenames now include date and time
 
 ### v1.2.0 (January 2026)
 - **Vehicle Selection**: Choose from 50 Porsche EV models with accurate WLTP specs

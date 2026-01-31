@@ -20,6 +20,7 @@ import { useTranslation } from './i18n';
 
 // Services
 import { processUploadedData, extractVehicleModel } from './services/dataProcessor';
+import { mergeRawData, reconstructRawDataFromTrips } from './utils/dataMerger';
 
 // Components
 import { StatCard, ChartCard, TimeViewSelector } from './components/common';
@@ -63,6 +64,8 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [vehicleModel, setVehicleModel] = useState(null);
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
+  const [uploadMode, setUploadMode] = useState('replace'); // 'replace' or 'merge'
+  const [rawData, setRawData] = useState({ start: [], charge: [] }); // Raw CSV rows for merging
   const [darkMode, setDarkMode] = useState(() => {
     const saved = safeStorage.get('taycan_theme');
     return saved !== null ? saved : true;
@@ -78,8 +81,10 @@ export default function App() {
     const savedData = safeStorage.get(STORAGE_KEYS.DATA);
     const savedSettings = safeStorage.get(STORAGE_KEYS.SETTINGS);
     const savedModel = safeStorage.get(STORAGE_KEYS.VEHICLE_MODEL);
+    const savedRawData = safeStorage.get(STORAGE_KEYS.RAW_DATA);
     if (savedData) setAppData(savedData);
     if (savedModel) setVehicleModel(savedModel);
+    if (savedRawData) setRawData(savedRawData);
     if (savedSettings) {
       setElectricityPrice(savedSettings.electricityPrice ?? 0.25);
       setPetrolPrice(savedSettings.petrolPrice ?? 1.80);
@@ -730,12 +735,52 @@ export default function App() {
 
   const processUploadedFiles = useCallback(() => {
     if (!uploadStatus.start?.data) {
-      setModalConfig({ title: 'Missing File', message: 'Please upload the "Since Start" file to proceed.', variant: 'danger' });
+      setModalConfig({ title: t('upload.missingFile'), message: t('upload.missingFileDesc'), variant: 'danger' });
       return;
     }
-    const processed = processUploadedData(uploadStatus.start.data, uploadStatus.charge?.data || []);
+
+    let finalStartData = uploadStatus.start.data;
+    let finalChargeData = uploadStatus.charge?.data || [];
+    let mergeStats = null;
+
+    // Handle merge mode
+    if (uploadMode === 'merge') {
+      if (rawData.start.length > 0) {
+        // We have raw data to merge with
+        const startMerge = mergeRawData(rawData.start, uploadStatus.start.data);
+        finalStartData = startMerge.merged;
+        mergeStats = { start: startMerge.stats };
+
+        if (uploadStatus.charge?.data && rawData.charge.length > 0) {
+          const chargeMerge = mergeRawData(rawData.charge, uploadStatus.charge.data);
+          finalChargeData = chargeMerge.merged;
+          mergeStats.charge = chargeMerge.stats;
+        } else if (uploadStatus.charge?.data) {
+          finalChargeData = uploadStatus.charge.data;
+        } else {
+          finalChargeData = rawData.charge;
+        }
+      } else if (appData !== null) {
+        // User has data but no raw data (old backup) - show warning and proceed as replace
+        setModalConfig({
+          title: t('upload.mergeUnavailable'),
+          message: t('upload.mergeUnavailableDesc'),
+          variant: 'warning'
+        });
+        // Still proceed with the upload as replace mode
+      }
+    }
+
+    // Store raw data for future merges
+    const newRawData = { start: finalStartData, charge: finalChargeData };
+    setRawData(newRawData);
+    safeStorage.set(STORAGE_KEYS.RAW_DATA, newRawData);
+
+    // Process and store the computed data
+    const processed = processUploadedData(finalStartData, finalChargeData);
     setAppData(processed);
     safeStorage.set(STORAGE_KEYS.DATA, processed);
+
     const model = uploadStatus.start?.model || uploadStatus.charge?.model || null;
     if (model) {
       setVehicleModel(model);
@@ -748,20 +793,35 @@ export default function App() {
         setBatteryCapacity(guessedVehicle.usableBattery);
       }
     }
+
+    // Show merge results
+    if (mergeStats) {
+      const newTrips = mergeStats.start.new;
+      const duplicates = mergeStats.start.duplicates;
+      const total = mergeStats.start.total;
+      setModalConfig({
+        title: t('upload.mergeComplete'),
+        message: t('upload.mergeStats', { new: newTrips, duplicates, total }),
+        variant: 'success'
+      });
+    }
+
     setShowUpload(false);
     setUploadStatus({ start: null, charge: null });
-  }, [uploadStatus]);
+    setUploadMode('replace'); // Reset mode
+  }, [uploadStatus, uploadMode, rawData, t]);
 
   const handleBackup = useCallback(() => {
     try {
-      const backup = { version: 3, timestamp: new Date().toISOString(), data: appData, vehicleModel, settings: { electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat, language, selectedVehicleId } };
+      const backup = { version: 4, timestamp: new Date().toISOString(), data: appData, rawData, vehicleModel, settings: { electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat, language, selectedVehicleId } };
       const modelSlug = vehicleModel ? vehicleModel.toLowerCase().replace(/\s+/g, '-') : 'porsche';
-      const filename = `${modelSlug}-backup-${new Date().toISOString().split('T')[0]}.json`;
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const filename = `${modelSlug}-backup-${timestamp}.json`;
       downloadFile(JSON.stringify(backup, null, 2), filename);
     } catch (err) {
       setModalConfig({ title: 'Export Error', message: 'Failed to create backup: ' + err.message, variant: 'danger' });
     }
-  }, [appData, vehicleModel, electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat, language, selectedVehicleId]);
+  }, [appData, rawData, vehicleModel, electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat, language, selectedVehicleId]);
 
   const handleRestore = useCallback((file) => {
     const reader = new FileReader();
@@ -770,6 +830,19 @@ export default function App() {
         const backup = JSON.parse(e.target.result);
         if (backup.data) { setAppData(backup.data); safeStorage.set(STORAGE_KEYS.DATA, backup.data); }
         if (backup.vehicleModel) { setVehicleModel(backup.vehicleModel); safeStorage.set(STORAGE_KEYS.VEHICLE_MODEL, backup.vehicleModel); }
+        // Restore raw data if present (v4+ backups)
+        if (backup.rawData) {
+          setRawData(backup.rawData);
+          safeStorage.set(STORAGE_KEYS.RAW_DATA, backup.rawData);
+        } else if (backup.data?.rawTrips) {
+          // Reconstruct raw data from older backups that have rawTrips
+          const reconstructedRawData = {
+            start: reconstructRawDataFromTrips(backup.data.rawTrips),
+            charge: [] // Charge data not available in old backups
+          };
+          setRawData(reconstructedRawData);
+          safeStorage.set(STORAGE_KEYS.RAW_DATA, reconstructedRawData);
+        }
         if (backup.settings) {
           setElectricityPrice(backup.settings.electricityPrice ?? 0.25);
           setPetrolPrice(backup.settings.petrolPrice ?? 1.80);
@@ -808,7 +881,9 @@ export default function App() {
         setAppData(null);
         setUseSampleData(false);
         setVehicleModel(null);
+        setRawData({ start: [], charge: [] });
         safeStorage.remove(STORAGE_KEYS.DATA);
+        safeStorage.remove(STORAGE_KEYS.RAW_DATA);
         safeStorage.remove(STORAGE_KEYS.VEHICLE_MODEL);
         setShowSettings(false);
       }
@@ -864,6 +939,9 @@ export default function App() {
           uploadStatus={uploadStatus}
           handleFileUpload={handleFileUpload}
           processUploadedFiles={processUploadedFiles}
+          hasExistingData={rawData.start.length > 0 || appData !== null}
+          uploadMode={uploadMode}
+          setUploadMode={setUploadMode}
         />
       )}
 

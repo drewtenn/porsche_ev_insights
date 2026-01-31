@@ -79,13 +79,25 @@ export const it = {
   // Upload modal
   upload: {
     title: 'Carica dati Porsche',
+    mergeTitle: 'Aggiungi altri dati',
     sinceStart: 'Dall\'inizio',
     sinceStartDesc: 'Viaggi individuali',
     sinceCharge: 'Dalla ricarica',
     sinceChargeDesc: 'Cicli di ricarica',
     processButton: 'Elabora dati',
+    mergeButton: 'Unisci dati',
     tripsCount: '{count} viaggi',
-    cyclesCount: '{count} cicli'
+    cyclesCount: '{count} cicli',
+    modeReplace: 'Sostituisci',
+    modeMerge: 'Unisci',
+    replaceDesc: 'Sostituisci tutti i dati esistenti con nuovi file',
+    mergeDesc: 'Aggiungi nuovi viaggi ai dati esistenti (i duplicati verranno ignorati)',
+    mergeComplete: 'Dati uniti con successo',
+    mergeStats: 'Aggiunti {new} nuovi viaggi ({duplicates} duplicati ignorati). Totale: {total} viaggi.',
+    mergeUnavailable: 'Unione non disponibile',
+    mergeUnavailableDesc: 'I tuoi dati sono stati importati prima dell\'aggiunta del supporto per l\'unione. Per favore usa Sostituisci questa volta. Le importazioni future supporteranno l\'unione.',
+    missingFile: 'File mancante',
+    missingFileDesc: 'Per favore carica il file "Dall\'inizio" per continuare.'
   },
 
   // Settings page

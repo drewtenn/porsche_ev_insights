@@ -79,13 +79,25 @@ export const en = {
   // Upload modal
   upload: {
     title: 'Upload Porsche Data',
+    mergeTitle: 'Add More Data',
     sinceStart: 'Since Start',
     sinceStartDesc: 'Individual trips',
     sinceCharge: 'Since Charge',
     sinceChargeDesc: 'Charge cycles',
     processButton: 'Process Data',
+    mergeButton: 'Merge Data',
     tripsCount: '{count} trips',
-    cyclesCount: '{count} cycles'
+    cyclesCount: '{count} cycles',
+    modeReplace: 'Replace',
+    modeMerge: 'Merge',
+    replaceDesc: 'Replace all existing data with new files',
+    mergeDesc: 'Add new trips to existing data (duplicates will be skipped)',
+    mergeComplete: 'Data Merged Successfully',
+    mergeStats: 'Added {new} new trips ({duplicates} duplicates skipped). Total: {total} trips.',
+    mergeUnavailable: 'Merge Not Available',
+    mergeUnavailableDesc: 'Your existing data was imported before merge support was added. Please use Replace mode this time. Future imports will support merging.',
+    missingFile: 'Missing File',
+    missingFileDesc: 'Please upload the "Since Start" file to proceed.'
   },
 
   // Settings page

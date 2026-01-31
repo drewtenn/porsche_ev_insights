@@ -79,13 +79,25 @@ export const ja = {
   // Upload modal
   upload: {
     title: 'ポルシェデータをアップロード',
+    mergeTitle: 'データを追加',
     sinceStart: '開始から',
     sinceStartDesc: '個別トリップ',
     sinceCharge: '充電から',
     sinceChargeDesc: '充電サイクル',
     processButton: 'データを処理',
+    mergeButton: 'データを統合',
     tripsCount: '{count}トリップ',
-    cyclesCount: '{count}サイクル'
+    cyclesCount: '{count}サイクル',
+    modeReplace: '置換',
+    modeMerge: '統合',
+    replaceDesc: '既存のデータをすべて新しいファイルで置き換える',
+    mergeDesc: '既存のデータに新しいトリップを追加（重複はスキップ）',
+    mergeComplete: 'データの統合が完了しました',
+    mergeStats: '{new}件の新しいトリップを追加（{duplicates}件の重複をスキップ）。合計：{total}トリップ。',
+    mergeUnavailable: '統合は利用できません',
+    mergeUnavailableDesc: 'データは統合サポートが追加される前にインポートされました。今回は置換を使用してください。今後のインポートは統合をサポートします。',
+    missingFile: 'ファイルがありません',
+    missingFileDesc: '続行するには「開始から」ファイルをアップロードしてください。'
   },
 
   // Settings page

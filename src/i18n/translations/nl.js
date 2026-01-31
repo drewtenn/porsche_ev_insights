@@ -79,13 +79,25 @@ export const nl = {
   // Upload modal
   upload: {
     title: 'Porsche-gegevens uploaden',
+    mergeTitle: 'Meer gegevens toevoegen',
     sinceStart: 'Sinds start',
     sinceStartDesc: 'Individuele ritten',
     sinceCharge: 'Sinds opladen',
     sinceChargeDesc: 'Laadcycli',
     processButton: 'Gegevens verwerken',
+    mergeButton: 'Gegevens samenvoegen',
     tripsCount: '{count} ritten',
-    cyclesCount: '{count} cycli'
+    cyclesCount: '{count} cycli',
+    modeReplace: 'Vervangen',
+    modeMerge: 'Samenvoegen',
+    replaceDesc: 'Alle bestaande gegevens vervangen door nieuwe bestanden',
+    mergeDesc: 'Nieuwe ritten toevoegen aan bestaande gegevens (duplicaten worden overgeslagen)',
+    mergeComplete: 'Gegevens succesvol samengevoegd',
+    mergeStats: '{new} nieuwe ritten toegevoegd ({duplicates} duplicaten overgeslagen). Totaal: {total} ritten.',
+    mergeUnavailable: 'Samenvoegen niet beschikbaar',
+    mergeUnavailableDesc: 'Uw gegevens werden geïmporteerd voordat samenvoegen werd ondersteund. Gebruik deze keer Vervangen. Toekomstige imports ondersteunen samenvoegen.',
+    missingFile: 'Bestand ontbreekt',
+    missingFileDesc: 'Upload het "Sinds start" bestand om door te gaan.'
   },
 
   // Settings page
