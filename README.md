@@ -12,6 +12,7 @@
 
 <p align="center">
   <a href="https://jpleite.github.io/porsche_ev_insights/">Live Demo</a> •
+  <a href="https://github.com/jpleite/porsche_ev_insights/wiki">Documentation</a> •
   <a href="#features">Features</a> •
   <a href="#getting-started">Getting Started</a> •
   <a href="#how-to-export-your-data">Export Data</a>
@@ -251,6 +252,17 @@ Contributions are welcome! Feel free to:
 - **CSV import**: Support for Porsche Connect exports
 - **Charts**: Distance, consumption, patterns, costs, environmental impact
 - **Settings**: Customizable electricity prices, unit systems, currencies
+
+## Documentation
+
+For detailed guides and reference material, visit the **[Wiki](https://github.com/jpleite/porsche_ev_insights/wiki)**:
+
+- [Getting Started](https://github.com/jpleite/porsche_ev_insights/wiki/Getting-Started) - First steps with the dashboard
+- [Exporting Data from My Porsche](https://github.com/jpleite/porsche_ev_insights/wiki/Exporting-Data-from-My-Porsche) - How to get your data
+- [Understanding the Dashboard](https://github.com/jpleite/porsche_ev_insights/wiki/Understanding-the-Dashboard) - Navigation and features
+- [Settings and Configuration](https://github.com/jpleite/porsche_ev_insights/wiki/Settings-and-Configuration) - Customization options
+- [Building and Self-Hosting](https://github.com/jpleite/porsche_ev_insights/wiki/Building-and-Self-Hosting) - Run your own instance
+- [Glossary](https://github.com/jpleite/porsche_ev_insights/wiki/Glossary) - EV terminology explained
 
 ## License
 
