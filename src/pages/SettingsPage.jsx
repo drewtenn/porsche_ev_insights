@@ -1,4 +1,5 @@
 import { UNIT_SYSTEMS, CURRENCIES, FUEL_CONSUMPTION_FORMATS, ELECTRIC_CONSUMPTION_FORMATS } from '../constants/units';
+import { PORSCHE_EV_MODELS, getVehicleById, getVehiclesGrouped } from '../constants/porscheEvModels';
 import { useTranslation, SUPPORTED_LANGUAGES } from '../i18n';
 
 export function SettingsPage({
@@ -20,6 +21,8 @@ export function SettingsPage({
   setPetrolConsumption,
   batteryCapacity,
   setBatteryCapacity,
+  selectedVehicleId,
+  setSelectedVehicleId,
   setShowUpload,
   handleClearData,
   handleBackup,
@@ -27,27 +30,81 @@ export function SettingsPage({
 }) {
   const { t, language, setLanguage } = useTranslation();
 
+  // Get grouped vehicles for the dropdown
+  const vehicleGroups = getVehiclesGrouped();
+
+  // Handle vehicle selection change
+  const handleVehicleChange = (e) => {
+    const vehicleId = e.target.value;
+    setSelectedVehicleId(vehicleId || null);
+
+    // Auto-fill battery capacity when vehicle is selected
+    if (vehicleId) {
+      const vehicle = getVehicleById(vehicleId);
+      if (vehicle) {
+        setBatteryCapacity(vehicle.usableBattery);
+      }
+    }
+  };
+
+  // Get selected vehicle for displaying WLTP info
+  const selectedVehicle = selectedVehicleId ? getVehicleById(selectedVehicleId) : null;
+
   return (
     <div className="space-y-6">
       <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{t('settings.title')}</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Language */}
+        {/* Vehicle Settings */}
         <div className={`p-4 rounded-xl border ${darkMode ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}>
-          <h3 className={`text-sm font-semibold mb-4 ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{t('settings.language')}</h3>
+          <h3 className={`text-sm font-semibold mb-4 ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{t('settings.vehicleSettings')}</h3>
           <div className="space-y-3">
             <div>
-              <label className={`block text-xs mb-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('settings.languageLabel')}</label>
+              <label className={`block text-xs mb-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('settings.vehicleModel')}</label>
               <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
+                value={selectedVehicleId || ''}
+                onChange={handleVehicleChange}
                 className={`w-full px-3 py-2 rounded-lg text-sm focus:border-sky-500 outline-none ${darkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-50 border-zinc-300 text-zinc-900'} border`}
               >
-                {SUPPORTED_LANGUAGES.map(lang => (
-                  <option key={lang.code} value={lang.code}>{lang.nativeName} ({lang.name})</option>
+                <option value="">{t('settings.selectVehicle')}</option>
+                {Object.entries(vehicleGroups).map(([groupName, vehicles]) => (
+                  vehicles.length > 0 && (
+                    <optgroup key={groupName} label={groupName}>
+                      {vehicles.map(v => (
+                        <option key={v.id} value={v.id}>{v.name}</option>
+                      ))}
+                    </optgroup>
+                  )
                 ))}
               </select>
             </div>
+            {selectedVehicle && (
+              <div className={`p-2 rounded-lg text-xs ${darkMode ? 'bg-zinc-800/50 text-zinc-400' : 'bg-zinc-100 text-zinc-600'}`}>
+                <div className="flex justify-between mb-1">
+                  <span>{t('settings.grossBattery')}:</span>
+                  <span className="font-medium">{selectedVehicle.grossBattery} kWh</span>
+                </div>
+                <div className="flex justify-between mb-1">
+                  <span>{t('settings.usableBatterySpec')}:</span>
+                  <span className="font-medium">{selectedVehicle.usableBattery} kWh</span>
+                </div>
+                <div className="flex justify-between mb-1">
+                  <span>{t('settings.wltpRange')}:</span>
+                  <span className="font-medium">{selectedVehicle.wltpRange} km</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>{t('settings.wltpConsumption')}:</span>
+                  <span className="font-medium">{selectedVehicle.wltpConsumption} kWh/100km</span>
+                </div>
+              </div>
+            )}
+            <div>
+              <label className={`block text-xs mb-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('settings.batteryCapacity')}</label>
+              <input type="number" step="0.1" value={batteryCapacity} onChange={(e) => setBatteryCapacity(parseFloat(e.target.value) || 83.7)} className={`w-full px-3 py-2 rounded-lg text-sm focus:border-sky-500 outline-none ${darkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-50 border-zinc-300 text-zinc-900'} border`} />
+            </div>
+            <p className={`text-xs ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
+              {t('settings.batteryCapacityHelp')}
+            </p>
           </div>
         </div>
 
@@ -58,7 +115,7 @@ export function SettingsPage({
             <div>
               <label className={`block text-xs mb-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('settings.unitSystem')}</label>
               <select value={unitSystem} onChange={(e) => setUnitSystem(e.target.value)} className={`w-full px-3 py-2 rounded-lg text-sm focus:border-sky-500 outline-none ${darkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-50 border-zinc-300 text-zinc-900'} border`}>
-                {Object.entries(UNIT_SYSTEMS).map(([key, sys]) => (
+                {Object.entries(UNIT_SYSTEMS).map(([key]) => (
                   <option key={key} value={key}>{t(`unitSystems.${key}`)}</option>
                 ))}
               </select>
@@ -121,17 +178,22 @@ export function SettingsPage({
           </div>
         </div>
 
-        {/* Vehicle Settings */}
+        {/* Language */}
         <div className={`p-4 rounded-xl border ${darkMode ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}>
-          <h3 className={`text-sm font-semibold mb-4 ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{t('settings.vehicleSettings')}</h3>
+          <h3 className={`text-sm font-semibold mb-4 ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{t('settings.language')}</h3>
           <div className="space-y-3">
             <div>
-              <label className={`block text-xs mb-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('settings.batteryCapacity')}</label>
-              <input type="number" step="0.1" value={batteryCapacity} onChange={(e) => setBatteryCapacity(parseFloat(e.target.value) || 83.7)} className={`w-full px-3 py-2 rounded-lg text-sm focus:border-sky-500 outline-none ${darkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-50 border-zinc-300 text-zinc-900'} border`} />
+              <label className={`block text-xs mb-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('settings.languageLabel')}</label>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className={`w-full px-3 py-2 rounded-lg text-sm focus:border-sky-500 outline-none ${darkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-50 border-zinc-300 text-zinc-900'} border`}
+              >
+                {SUPPORTED_LANGUAGES.map(lang => (
+                  <option key={lang.code} value={lang.code}>{lang.nativeName} ({lang.name})</option>
+                ))}
+              </select>
             </div>
-            <p className={`text-xs ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
-              {t('settings.batteryCapacityHelp')}
-            </p>
           </div>
         </div>
 
@@ -155,6 +217,27 @@ export function SettingsPage({
               <span className="inline-flex items-center gap-2"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>{t('settings.restoreBackup')}</span>
               <input type="file" accept=".json" className="hidden" onChange={(e) => e.target.files[0] && handleRestore(e.target.files[0])} />
             </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Vehicle Specs Notes */}
+      <div className={`p-4 rounded-xl ${darkMode ? 'bg-sky-500/5 border-sky-500/20' : 'bg-sky-500/10 border-sky-500/30'} border`}>
+        <div className="flex items-start gap-3">
+          <span className={`${darkMode ? 'text-sky-400' : 'text-sky-600'}`}>
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
+          </span>
+          <div>
+            <h4 className={`font-semibold text-sm mb-2 ${darkMode ? 'text-sky-400' : 'text-sky-700'}`}>{t('settings.vehicleNotesTitle')}</h4>
+            <ul className={`text-xs space-y-1 ${darkMode ? 'text-sky-400/80' : 'text-sky-600'}`}>
+              <li><span className="font-medium">WLTP</span>: {t('settings.noteWltp')}</li>
+              <li><span className="font-medium">PB</span>: {t('settings.notePb')}</li>
+              <li><span className="font-medium">PB+</span>: {t('settings.notePbPlus')}</li>
+              <li><span className="font-medium">J1.1</span>: {t('settings.noteJ11')}</li>
+              <li><span className="font-medium">J1.2</span>: {t('settings.noteJ12')}</li>
+            </ul>
           </div>
         </div>
       </div>

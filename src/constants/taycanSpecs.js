@@ -1,5 +1,8 @@
 // ========== TAYCAN SPECIFICATIONS ==========
+// Note: Battery capacity and WLTP range are now configured per-vehicle in porscheEvModels.js
+// These values are kept for benchmark comparisons and environmental calculations
 export const TAYCAN_SPECS = {
+  // Legacy defaults (used if no vehicle is selected)
   batteryCapacity: 93.4,      // Gross battery capacity in kWh
   usableBattery: 83.7,        // Usable battery capacity in kWh
   officialRange: 416,         // WLTP range in km (Taycan 4 Cross Turismo)

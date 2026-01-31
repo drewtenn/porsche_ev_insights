@@ -116,8 +116,22 @@ export const zh = {
 
     // Vehicle settings section
     vehicleSettings: '车辆设置',
+    vehicleModel: '保时捷电动车型号',
+    selectVehicle: '选择您的车辆...',
+    grossBattery: '电池总容量',
+    usableBatterySpec: '可用电池容量',
+    wltpRange: 'WLTP续航',
+    wltpConsumption: 'WLTP能耗',
     batteryCapacity: '可用电池容量 (kWh)',
-    batteryCapacityHelp: '用于续航计算。常见值：71 kWh（基础版），83.7 kWh（Performance Battery Plus）',
+    batteryCapacityHelp: '选择车辆时自动填充。如需要可手动修改。',
+
+    // Vehicle notes
+    vehicleNotesTitle: '车辆规格说明',
+    noteWltp: '续航数据基于官方WLTP综合工况数据',
+    notePb: 'Performance Battery（标准/小容量电池）',
+    notePbPlus: 'Performance Battery Plus（选配/大容量电池）',
+    noteJ11: '2020-2024款车型（第一代）',
+    noteJ12: '2025+款车型（中期改款，续航提升约35%）',
 
     // Data management section
     dataManagement: '数据管理',
@@ -445,6 +459,10 @@ export const zh = {
   benchmark: {
     yourVehicle: '您的车辆',
     yourTaycan: '您的Taycan',
+    yourTaycanCT: '您的Taycan Cross Turismo',
+    yourTaycanST: '您的Taycan Sport Turismo',
+    yourMacan: '您的Macan Electric',
+    yourCayenne: '您的Cayenne Electric',
     yourPorsche: '您的保时捷',
     average: '平均',
     avg: '均',
@@ -453,7 +471,8 @@ export const zh = {
     worseThan: '高于',
     similar: '相似于',
     avgTaycan: 'Taycan均值',
-    avgPorsche: '保时捷均值'
+    avgPorsche: '保时捷均值',
+    avgWltp: 'WLTP均值'
   },
 
   // Driving profiles

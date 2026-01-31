@@ -116,8 +116,22 @@ export const de = {
 
     // Vehicle settings section
     vehicleSettings: 'Fahrzeugeinstellungen',
+    vehicleModel: 'Porsche EV Modell',
+    selectVehicle: 'Fahrzeug auswählen...',
+    grossBattery: 'Brutto-Batterie',
+    usableBatterySpec: 'Nutzbare Batterie',
+    wltpRange: 'WLTP-Reichweite',
+    wltpConsumption: 'WLTP-Verbrauch',
     batteryCapacity: 'Nutzbare Batteriekapazität (kWh)',
-    batteryCapacityHelp: 'Für Reichweitenberechnungen. Übliche Werte: 71 kWh (Basis), 83.7 kWh (Performance Battery Plus)',
+    batteryCapacityHelp: 'Wird bei Fahrzeugauswahl automatisch ausgefüllt. Kann manuell angepasst werden.',
+
+    // Vehicle notes
+    vehicleNotesTitle: 'Hinweise zu Fahrzeugspezifikationen',
+    noteWltp: 'Reichweitenwerte basieren auf offiziellen WLTP-Kombinationszyklus-Daten',
+    notePb: 'Performance Battery (Standard-/kleinere Batterieoption)',
+    notePbPlus: 'Performance Battery Plus (optionale/größere Batterie)',
+    noteJ11: 'Modelle 2020-2024 (erste Generation)',
+    noteJ12: 'Modelle 2025+ (Facelift mit ~35% mehr Reichweite)',
 
     // Data management section
     dataManagement: 'Datenverwaltung',
@@ -445,6 +459,10 @@ export const de = {
   benchmark: {
     yourVehicle: 'Ihr Fahrzeug',
     yourTaycan: 'Ihr Taycan',
+    yourTaycanCT: 'Ihr Taycan Cross Turismo',
+    yourTaycanST: 'Ihr Taycan Sport Turismo',
+    yourMacan: 'Ihr Macan Electric',
+    yourCayenne: 'Ihr Cayenne Electric',
     yourPorsche: 'Ihr Porsche',
     average: 'Durchschnitt',
     avg: 'Ø',
@@ -453,7 +471,8 @@ export const de = {
     worseThan: 'schlechter als',
     similar: 'Ähnlich wie',
     avgTaycan: 'Durchschn. Taycan',
-    avgPorsche: 'Durchschn. Porsche'
+    avgPorsche: 'Durchschn. Porsche',
+    avgWltp: 'Durchschn. WLTP'
   },
 
   // Driving profiles

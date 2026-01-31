@@ -1,7 +1,6 @@
 import { BarChart, Bar, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Line } from 'recharts';
 import { StatCard } from '../common/StatCard';
 import { ChartCard } from '../common/ChartCard';
-import { TAYCAN_SPECS } from '../../constants/taycanSpecs';
 import { useTranslation } from '../../i18n';
 
 export function BatteryTab({
@@ -78,7 +77,7 @@ export function BatteryTab({
               <Tooltip contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px' }} itemStyle={{ color: chartColors.tooltipText }} labelStyle={{ color: chartColors.tooltipText }} />
               <Legend />
               <Area type="monotone" dataKey="consumption" name={units.elecConsUnit} stroke="#8b5cf6" fill="#8b5cf644" strokeWidth={2} />
-              <Line type="monotone" dataKey={() => units.elecCons(TAYCAN_SPECS.officialConsumption).value} name="WLTP" stroke="#22c55e" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+              <Line type="monotone" dataKey={() => units.elecCons(batteryAnalysis.officialConsumption).value} name="WLTP" stroke="#22c55e" strokeWidth={2} strokeDasharray="5 5" dot={false} />
             </ComposedChart>
           </ResponsiveContainer>
         </ChartCard>

@@ -7,7 +7,7 @@
 <h1 align="center">Porsche EV Insights</h1>
 
 <p align="center">
-  <strong>Privacy-first analytics dashboard for your Porsche Taycan trip data</strong>
+  <strong>Privacy-first analytics dashboard for your Porsche EV trip data</strong>
 </p>
 
 <p align="center">
@@ -40,7 +40,22 @@ I felt the Porsche app lacks the deeper insights that can be extracted from the 
 | **Environmental Impact** | CO2 savings compared to combustion vehicles |
 | **Battery Insights** | Charging patterns and battery usage statistics |
 | **Smart Insights** | AI-generated observations about your driving habits |
+| **Vehicle Selection** | Choose from 50 Porsche EV models with accurate WLTP specs |
+| **EV Comparison** | Compare your real-world consumption vs WLTP and other EVs |
 | **Flexible Units** | Support for Metric, Imperial (UK), and Imperial (US) units |
+| **10 Languages** | EN, PT, ES, FR, DE, IT, NL, PL, ZH, JA |
+
+## Supported Vehicles
+
+All Porsche electric vehicles are supported with accurate battery and WLTP specifications:
+
+- **Taycan** (all variants: 4, 4S, GTS, Turbo, Turbo S, Turbo GT)
+- **Taycan Cross Turismo** (all variants)
+- **Taycan Sport Turismo** (all variants)
+- **Macan Electric** (all variants)
+- **Cayenne Electric** (coming soon)
+
+Both J1.1 (2020-2024) and J1.2 (2025+) generation Taycans are supported, with Performance Battery (PB) and Performance Battery Plus (PB+) options.
 
 ## Units & Currency Settings
 
@@ -185,6 +200,37 @@ Contributions are welcome! Feel free to:
 - Suggest new features
 - Submit pull requests
 
+## Release History
+
+### v1.2.0 (January 2026)
+- **Vehicle Selection**: Choose from 50 Porsche EV models with accurate WLTP specs
+- **Auto-detection**: Automatically guesses your vehicle from CSV filename
+- **EV Comparison Chart**: Compare your real-world data vs WLTP official values
+- **WLTP Consumption**: Shows vehicle-specific WLTP consumption in settings and charts
+- **Translated vehicle names**: "Your Taycan" properly translated in all 10 languages
+
+### v1.1.0 (January 2026)
+- **Internationalization**: Full i18n support with 10 languages
+- **Driving Profiles**: Translated driving profile names (Urban Commuter, Mixed Use, etc.)
+- **Improved translations**: Better context-aware translations across all UI elements
+
+### v1.0.2 (January 2026)
+- **Unit system improvements**: Better handling of metric/imperial conversions
+- **Currency support**: 10 currencies with proper formatting
+- **Consumption formats**: Multiple electric and fuel consumption display options
+
+### v1.0.1 (December 2025)
+- **Bug fixes**: CSV parsing improvements for edge cases
+- **Performance**: Optimized chart rendering
+- **UI polish**: Better dark mode contrast and accessibility
+
+### v1.0.0 (December 2025)
+- **Initial release**: Core dashboard with 7 analysis tabs
+- **Privacy-first**: All data processed locally in browser
+- **CSV import**: Support for Porsche Connect exports
+- **Charts**: Distance, consumption, patterns, costs, environmental impact
+- **Settings**: Customizable electricity prices, unit systems, currencies
+
 ## License
 
 MIT License - for personal use only.
@@ -192,5 +238,5 @@ MIT License - for personal use only.
 ---
 
 <p align="center">
-  Made with care for Taycan and Macan EV owners by <a href="https://github.com/jpleite">jpleite</a>
+  Made with care for Porsche EV owners by <a href="https://github.com/jpleite">jpleite</a>
 </p>

@@ -116,8 +116,22 @@ export const nl = {
 
     // Vehicle settings section
     vehicleSettings: 'Voertuiginstellingen',
+    vehicleModel: 'Porsche EV Model',
+    selectVehicle: 'Selecteer uw voertuig...',
+    grossBattery: 'Bruto Batterij',
+    usableBatterySpec: 'Bruikbare Batterij',
+    wltpRange: 'WLTP-bereik',
+    wltpConsumption: 'WLTP-verbruik',
     batteryCapacity: 'Bruikbare batterijcapaciteit (kWh)',
-    batteryCapacityHelp: 'Gebruikt voor bereikberekeningen. Gebruikelijke waarden: 71 kWh (basis), 83.7 kWh (Performance Battery Plus)',
+    batteryCapacityHelp: 'Automatisch ingevuld bij selectie voertuig. Handmatig aanpassen indien nodig.',
+
+    // Vehicle notes
+    vehicleNotesTitle: 'Opmerkingen over specificaties',
+    noteWltp: 'Bereikwaarden zijn gebaseerd op officiële WLTP gecombineerde cyclusgegevens',
+    notePb: 'Performance Battery (standaard/kleinere batterijoptie)',
+    notePbPlus: 'Performance Battery Plus (optionele/grotere batterij)',
+    noteJ11: 'Modellen 2020-2024 (eerste generatie)',
+    noteJ12: 'Modellen 2025+ (facelift met ~35% meer bereik)',
 
     // Data management section
     dataManagement: 'Gegevensbeheer',
@@ -445,6 +459,10 @@ export const nl = {
   benchmark: {
     yourVehicle: 'Jouw Voertuig',
     yourTaycan: 'Jouw Taycan',
+    yourTaycanCT: 'Jouw Taycan Cross Turismo',
+    yourTaycanST: 'Jouw Taycan Sport Turismo',
+    yourMacan: 'Jouw Macan Electric',
+    yourCayenne: 'Jouw Cayenne Electric',
     yourPorsche: 'Jouw Porsche',
     average: 'Gemiddelde',
     avg: 'Gem',
@@ -453,7 +471,8 @@ export const nl = {
     worseThan: 'slechter dan',
     similar: 'Vergelijkbaar met',
     avgTaycan: 'Gem. Taycan',
-    avgPorsche: 'Gem. Porsche'
+    avgPorsche: 'Gem. Porsche',
+    avgWltp: 'Gem. WLTP'
   },
 
   // Driving profiles

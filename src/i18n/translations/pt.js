@@ -116,8 +116,22 @@ export const pt = {
 
     // Vehicle settings section
     vehicleSettings: 'Definições do Veículo',
+    vehicleModel: 'Modelo Porsche EV',
+    selectVehicle: 'Selecione o seu veículo...',
+    grossBattery: 'Bateria Bruta',
+    usableBatterySpec: 'Bateria Útil',
+    wltpRange: 'Autonomia WLTP',
+    wltpConsumption: 'Consumo WLTP',
     batteryCapacity: 'Capacidade Útil da Bateria (kWh)',
-    batteryCapacityHelp: 'Usado para cálculos de autonomia. Valores comuns: 71 kWh (base), 83.7 kWh (Performance Battery Plus)',
+    batteryCapacityHelp: 'Preenchido automaticamente ao selecionar um veículo. Pode alterar manualmente se necessário.',
+
+    // Vehicle notes
+    vehicleNotesTitle: 'Notas sobre Especificações',
+    noteWltp: 'Valores de autonomia baseados em dados oficiais do ciclo combinado WLTP',
+    notePb: 'Performance Battery (opção de bateria padrão/menor)',
+    notePbPlus: 'Performance Battery Plus (opção de bateria maior)',
+    noteJ11: 'Modelos 2020-2024 (primeira geração)',
+    noteJ12: 'Modelos 2025+ (atualização com ~35% mais autonomia)',
 
     // Data management section
     dataManagement: 'Gestão de Dados',
@@ -445,6 +459,10 @@ export const pt = {
   benchmark: {
     yourVehicle: 'O Seu Veículo',
     yourTaycan: 'O Seu Taycan',
+    yourTaycanCT: 'O Seu Taycan Cross Turismo',
+    yourTaycanST: 'O Seu Taycan Sport Turismo',
+    yourMacan: 'O Seu Macan Electric',
+    yourCayenne: 'O Seu Cayenne Electric',
     yourPorsche: 'O Seu Porsche',
     average: 'Média',
     avg: 'Méd',
@@ -453,7 +471,8 @@ export const pt = {
     worseThan: 'pior que',
     similar: 'Semelhante a',
     avgTaycan: 'Taycan Méd',
-    avgPorsche: 'Porsche Méd'
+    avgPorsche: 'Porsche Méd',
+    avgWltp: 'WLTP méd'
   },
 
   // Driving profiles

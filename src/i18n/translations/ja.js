@@ -116,8 +116,22 @@ export const ja = {
 
     // Vehicle settings section
     vehicleSettings: '車両設定',
+    vehicleModel: 'ポルシェEVモデル',
+    selectVehicle: '車両を選択...',
+    grossBattery: '総バッテリー容量',
+    usableBatterySpec: '使用可能容量',
+    wltpRange: 'WLTP航続距離',
+    wltpConsumption: 'WLTP消費',
     batteryCapacity: '使用可能バッテリー容量 (kWh)',
-    batteryCapacityHelp: '航続距離の計算に使用。一般的な値: 71 kWh (ベース), 83.7 kWh (パフォーマンスバッテリープラス)',
+    batteryCapacityHelp: '車両選択時に自動入力。手動で変更可能。',
+
+    // Vehicle notes
+    vehicleNotesTitle: '車両仕様に関する注記',
+    noteWltp: '航続距離は公式WLTPコンバインドサイクルデータに基づく',
+    notePb: 'Performance Battery（標準/小型バッテリー）',
+    notePbPlus: 'Performance Battery Plus（オプション/大型バッテリー）',
+    noteJ11: '2020-2024年モデル（第1世代）',
+    noteJ12: '2025年以降モデル（マイナーチェンジで約35%航続距離向上）',
 
     // Data management section
     dataManagement: 'データ管理',
@@ -445,6 +459,10 @@ export const ja = {
   benchmark: {
     yourVehicle: 'あなたの車両',
     yourTaycan: 'あなたのTaycan',
+    yourTaycanCT: 'あなたのTaycan Cross Turismo',
+    yourTaycanST: 'あなたのTaycan Sport Turismo',
+    yourMacan: 'あなたのMacan Electric',
+    yourCayenne: 'あなたのCayenne Electric',
     yourPorsche: 'あなたのポルシェ',
     average: '平均',
     avg: '平均',
@@ -453,7 +471,8 @@ export const ja = {
     worseThan: '超えている',
     similar: '同等',
     avgTaycan: 'Taycan平均',
-    avgPorsche: 'ポルシェ平均'
+    avgPorsche: 'ポルシェ平均',
+    avgWltp: 'WLTP平均'
   },
 
   // Driving profiles

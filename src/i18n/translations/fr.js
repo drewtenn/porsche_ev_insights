@@ -116,8 +116,22 @@ export const fr = {
 
     // Vehicle settings section
     vehicleSettings: 'Paramètres du véhicule',
+    vehicleModel: 'Modèle Porsche EV',
+    selectVehicle: 'Sélectionnez votre véhicule...',
+    grossBattery: 'Batterie Brute',
+    usableBatterySpec: 'Batterie Utile',
+    wltpRange: 'Autonomie WLTP',
+    wltpConsumption: 'Consommation WLTP',
     batteryCapacity: 'Capacité batterie utile (kWh)',
-    batteryCapacityHelp: 'Utilisé pour les calculs d\'autonomie. Valeurs courantes: 71 kWh (base), 83.7 kWh (Performance Battery Plus)',
+    batteryCapacityHelp: 'Rempli automatiquement lors de la sélection du véhicule. Modifiable manuellement.',
+
+    // Vehicle notes
+    vehicleNotesTitle: 'Notes sur les spécifications',
+    noteWltp: 'Les valeurs d\'autonomie sont basées sur les données officielles du cycle combiné WLTP',
+    notePb: 'Performance Battery (option batterie standard/petite)',
+    notePbPlus: 'Performance Battery Plus (batterie optionnelle/grande)',
+    noteJ11: 'Modèles 2020-2024 (première génération)',
+    noteJ12: 'Modèles 2025+ (mise à jour avec ~35% d\'autonomie en plus)',
 
     // Data management section
     dataManagement: 'Gestion des données',
@@ -445,6 +459,10 @@ export const fr = {
   benchmark: {
     yourVehicle: 'Votre Véhicule',
     yourTaycan: 'Votre Taycan',
+    yourTaycanCT: 'Votre Taycan Cross Turismo',
+    yourTaycanST: 'Votre Taycan Sport Turismo',
+    yourMacan: 'Votre Macan Electric',
+    yourCayenne: 'Votre Cayenne Electric',
     yourPorsche: 'Votre Porsche',
     average: 'Moyenne',
     avg: 'Moy',
@@ -453,7 +471,8 @@ export const fr = {
     worseThan: 'pire que',
     similar: 'Similaire à',
     avgTaycan: 'Taycan Moy',
-    avgPorsche: 'Porsche Moy'
+    avgPorsche: 'Porsche Moy',
+    avgWltp: 'WLTP moy'
   },
 
   // Driving profiles

@@ -116,8 +116,22 @@ export const es = {
 
     // Vehicle settings section
     vehicleSettings: 'Configuración del vehículo',
+    vehicleModel: 'Modelo Porsche EV',
+    selectVehicle: 'Selecciona tu vehículo...',
+    grossBattery: 'Batería Bruta',
+    usableBatterySpec: 'Batería Útil',
+    wltpRange: 'Autonomía WLTP',
+    wltpConsumption: 'Consumo WLTP',
     batteryCapacity: 'Capacidad de batería útil (kWh)',
-    batteryCapacityHelp: 'Usado para cálculos de autonomía. Valores comunes: 71 kWh (base), 83.7 kWh (Performance Battery Plus)',
+    batteryCapacityHelp: 'Se rellena automáticamente al seleccionar un vehículo. Puedes modificarlo manualmente.',
+
+    // Vehicle notes
+    vehicleNotesTitle: 'Notas sobre especificaciones',
+    noteWltp: 'Los valores de autonomía se basan en datos oficiales del ciclo combinado WLTP',
+    notePb: 'Performance Battery (opción de batería estándar/menor)',
+    notePbPlus: 'Performance Battery Plus (batería opcional/mayor)',
+    noteJ11: 'Modelos 2020-2024 (primera generación)',
+    noteJ12: 'Modelos 2025+ (actualización con ~35% más autonomía)',
 
     // Data management section
     dataManagement: 'Gestión de datos',
@@ -445,6 +459,10 @@ export const es = {
   benchmark: {
     yourVehicle: 'Tu Vehículo',
     yourTaycan: 'Tu Taycan',
+    yourTaycanCT: 'Tu Taycan Cross Turismo',
+    yourTaycanST: 'Tu Taycan Sport Turismo',
+    yourMacan: 'Tu Macan Electric',
+    yourCayenne: 'Tu Cayenne Electric',
     yourPorsche: 'Tu Porsche',
     average: 'Promedio',
     avg: 'Prom',
@@ -453,7 +471,8 @@ export const es = {
     worseThan: 'peor que',
     similar: 'Similar a',
     avgTaycan: 'Taycan Prom',
-    avgPorsche: 'Porsche Prom'
+    avgPorsche: 'Porsche Prom',
+    avgWltp: 'WLTP prom'
   },
 
   // Driving profiles

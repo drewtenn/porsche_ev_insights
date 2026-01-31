@@ -6,6 +6,7 @@ import { UNIT_SYSTEMS, CURRENCIES, FUEL_CONSUMPTION_FORMATS, ELECTRIC_CONSUMPTIO
 import { SAMPLE_DATA } from './constants/sampleData';
 import { TAYCAN_SPECS } from './constants/taycanSpecs';
 import { STORAGE_KEYS } from './constants/storageKeys';
+import { PORSCHE_EV_MODELS, getVehicleById, guessVehicleFromString, DEFAULT_VEHICLE_ID } from './constants/porscheEvModels';
 
 // Utilities
 import { precise } from './utils/precise';
@@ -61,6 +62,7 @@ export default function App() {
   const [timeView, setTimeView] = useState('month');
   const [menuOpen, setMenuOpen] = useState(false);
   const [vehicleModel, setVehicleModel] = useState(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = safeStorage.get('taycan_theme');
     return saved !== null ? saved : true;
@@ -87,12 +89,13 @@ export default function App() {
       setCurrency(savedSettings.currency ?? 'EUR');
       setFuelConsFormat(savedSettings.fuelConsFormat ?? 'L/100km');
       setElecConsFormat(savedSettings.elecConsFormat ?? 'kWh/100km');
+      if (savedSettings.selectedVehicleId) setSelectedVehicleId(savedSettings.selectedVehicleId);
     }
   }, []);
 
   useEffect(() => {
-    safeStorage.set(STORAGE_KEYS.SETTINGS, { electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat });
-  }, [electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat]);
+    safeStorage.set(STORAGE_KEYS.SETTINGS, { electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat, selectedVehicleId });
+  }, [electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat, selectedVehicleId]);
 
   // Reset consumption formats and currency when unit system changes
   useEffect(() => {
@@ -120,6 +123,11 @@ export default function App() {
   }, [unitSystem]);
 
   const data = useMemo(() => appData || (useSampleData ? SAMPLE_DATA : null), [appData, useSampleData]);
+
+  // Get selected vehicle specs (falls back to default if not set)
+  const selectedVehicle = useMemo(() => {
+    return selectedVehicleId ? getVehicleById(selectedVehicleId) : null;
+  }, [selectedVehicleId]);
 
   // ========== UNIT FORMATTING HELPERS ==========
   const units = useMemo(() => {
@@ -406,7 +414,9 @@ export default function App() {
   const batteryAnalysis = useMemo(() => {
     if (!data) return null;
 
-    const { officialRange, officialConsumption } = TAYCAN_SPECS;
+    // Use selected vehicle's WLTP range and consumption if available, otherwise fall back to TAYCAN_SPECS defaults
+    const officialRange = selectedVehicle?.wltpRange || TAYCAN_SPECS.officialRange;
+    const officialConsumption = selectedVehicle?.wltpConsumption || TAYCAN_SPECS.officialConsumption;
     const usableBattery = batteryCapacity; // Use user-configurable battery capacity
 
     const realWorldRange = data.summary.avgConsumption > 0
@@ -426,6 +436,7 @@ export default function App() {
     return {
       realWorldRange: Math.round(realWorldRange),
       officialRange,
+      officialConsumption,
       rangeEfficiency,
       energyPerTrip: precise.round(energyPerTrip, 2),
       tripsPerFullCharge,
@@ -436,7 +447,7 @@ export default function App() {
       worstMonth,
       seasonalVariation
     };
-  }, [data, batteryCapacity]);
+  }, [data, batteryCapacity, selectedVehicle]);
 
   // ========== PREDICTIVE ANALYTICS ==========
   const predictions = useMemo(() => {
@@ -521,7 +532,9 @@ export default function App() {
     if (!data) return null;
 
     const { taycanBenchmark } = TAYCAN_SPECS;
-    const vsAvgTaycan = data.summary.avgConsumption > 0 ? Math.round(((data.summary.avgConsumption / taycanBenchmark.avgConsumption) - 1) * 100) : 0;
+    // Use selected vehicle's WLTP consumption for comparison, or fall back to Taycan average
+    const officialConsumption = selectedVehicle?.wltpConsumption || taycanBenchmark.avgConsumption;
+    const vsAvgTaycan = data.summary.avgConsumption > 0 ? Math.round(((data.summary.avgConsumption / officialConsumption) - 1) * 100) : 0;
     let efficiencyRating = 3;
     if (data.summary.avgConsumption <= 24) efficiencyRating = 5;
     else if (data.summary.avgConsumption <= 26) efficiencyRating = 4;
@@ -531,12 +544,33 @@ export default function App() {
     const shortTripPenalty = data.summary.shortTripsPct > 50 ? 'High' : data.summary.shortTripsPct > 30 ? 'Moderate' : 'Low';
     const microTripPct = data.tripTypes.find(t => t.type === 'Micro (<5km)')?.count || 0;
     const microTripRatio = data.summary.totalTrips > 0 ? precise.round(precise.div(microTripPct, data.summary.totalTrips) * 100, 1) : 0;
-    const yourVehicleName = vehicleDisplayName?.short || 'Your Porsche';
-    const avgVehicleName = vehicleDisplayName?.avgLabel || 'Porsche Avg';
+
+    // Build vehicle names for comparison chart
+    // Extract short model name and translation key from selected vehicle
+    const getVehicleTranslationKey = (vehicleName) => {
+      if (!vehicleName) return { key: 'yourPorsche', shortName: 'Porsche' };
+      const nameLower = vehicleName.toLowerCase();
+      if (nameLower.includes('cross turismo')) return { key: 'yourTaycanCT', shortName: 'Taycan Cross Turismo' };
+      if (nameLower.includes('sport turismo')) return { key: 'yourTaycanST', shortName: 'Taycan Sport Turismo' };
+      if (nameLower.includes('macan')) return { key: 'yourMacan', shortName: 'Macan Electric' };
+      if (nameLower.includes('cayenne')) return { key: 'yourCayenne', shortName: 'Cayenne Electric' };
+      if (nameLower.includes('taycan')) return { key: 'yourTaycan', shortName: 'Taycan' };
+      return { key: 'yourPorsche', shortName: 'Porsche' };
+    };
+
+    const { key: translationKey, shortName: shortModelName } = selectedVehicle
+      ? getVehicleTranslationKey(selectedVehicle.name)
+      : { key: 'yourPorsche', shortName: vehicleDisplayName?.modelShort || 'Porsche' };
+    const yourVehicleName = t(`benchmark.${translationKey}`);
+    const wltpLabel = selectedVehicle ? `${shortModelName} WLTP` : (vehicleDisplayName?.avgLabel || 'Porsche Avg');
+
+    // Build competitors list: Your real-world data vs WLTP official + other EVs for context
+    const wltpConsumption = selectedVehicle?.wltpConsumption || 24.8;
+    const wltpRange = selectedVehicle?.wltpRange || TAYCAN_SPECS.officialRange;
 
     const competitors = [
       { name: yourVehicleName, consumption: data.summary.avgConsumption, range: batteryAnalysis?.realWorldRange || 0 },
-      { name: avgVehicleName, consumption: 26.5, range: 316 },
+      { name: wltpLabel, consumption: wltpConsumption, range: wltpRange },
       { name: 'Model S', consumption: 18.5, range: 420 },
       { name: 'EQS', consumption: 20.5, range: 400 },
       { name: 'BMW i7', consumption: 22.0, range: 380 }
@@ -548,12 +582,13 @@ export default function App() {
       shortTripPenalty,
       microTripRatio,
       competitors,
-      avgVehicleName,
+      wltpLabel,
+      wltpConsumption,
       drivingProfile: data.summary.avgTripDistance < 15 ? t('drivingProfiles.urbanCommuter')
         : data.summary.avgTripDistance < 30 ? t('drivingProfiles.mixedUse')
         : t('drivingProfiles.highwayCruiser')
     };
-  }, [data, batteryAnalysis, vehicleDisplayName, t]);
+  }, [data, batteryAnalysis, vehicleDisplayName, selectedVehicle, t]);
 
   // ========== DRIVING INSIGHTS ==========
   const drivingInsights = useMemo(() => {
@@ -705,6 +740,13 @@ export default function App() {
     if (model) {
       setVehicleModel(model);
       safeStorage.set(STORAGE_KEYS.VEHICLE_MODEL, model);
+
+      // Try to auto-detect vehicle from the model name and set battery capacity
+      const guessedVehicle = guessVehicleFromString(model);
+      if (guessedVehicle) {
+        setSelectedVehicleId(guessedVehicle.id);
+        setBatteryCapacity(guessedVehicle.usableBattery);
+      }
     }
     setShowUpload(false);
     setUploadStatus({ start: null, charge: null });
@@ -712,14 +754,14 @@ export default function App() {
 
   const handleBackup = useCallback(() => {
     try {
-      const backup = { version: 2, timestamp: new Date().toISOString(), data: appData, vehicleModel, settings: { electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat, language } };
+      const backup = { version: 3, timestamp: new Date().toISOString(), data: appData, vehicleModel, settings: { electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat, language, selectedVehicleId } };
       const modelSlug = vehicleModel ? vehicleModel.toLowerCase().replace(/\s+/g, '-') : 'porsche';
       const filename = `${modelSlug}-backup-${new Date().toISOString().split('T')[0]}.json`;
       downloadFile(JSON.stringify(backup, null, 2), filename);
     } catch (err) {
       setModalConfig({ title: 'Export Error', message: 'Failed to create backup: ' + err.message, variant: 'danger' });
     }
-  }, [appData, vehicleModel, electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat, language]);
+  }, [appData, vehicleModel, electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat, language, selectedVehicleId]);
 
   const handleRestore = useCallback((file) => {
     const reader = new FileReader();
@@ -740,6 +782,10 @@ export default function App() {
           // Restore language setting if present (v2+ backups)
           if (backup.settings.language) {
             setLanguage(backup.settings.language);
+          }
+          // Restore selected vehicle ID if present (v3+ backups)
+          if (backup.settings.selectedVehicleId) {
+            setSelectedVehicleId(backup.settings.selectedVehicleId);
           }
         }
         setModalConfig({ title: 'Success', message: 'Backup restored successfully!', variant: 'success' });
@@ -867,6 +913,8 @@ export default function App() {
               setPetrolConsumption={setPetrolConsumption}
               batteryCapacity={batteryCapacity}
               setBatteryCapacity={setBatteryCapacity}
+              selectedVehicleId={selectedVehicleId}
+              setSelectedVehicleId={setSelectedVehicleId}
               setShowUpload={setShowUpload}
               handleClearData={handleClearData}
               handleBackup={handleBackup}
