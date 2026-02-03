@@ -21,7 +21,7 @@ export function PorscheConnectModal({
   const [serverAvailable, setServerAvailable] = useState(null);
   // Captcha state
   const [captchaImage, setCaptchaImage] = useState(null);
-  const [captchaState, setCaptchaState] = useState(null);
+  const [captchaSession, setCaptchaSession] = useState(null);
   const [captchaCode, setCaptchaCode] = useState('');
 
   // Check server availability and existing session on mount
@@ -77,7 +77,7 @@ export function PorscheConnectModal({
       // Check if captcha is required
       if (result.captchaRequired) {
         setCaptchaImage(result.captchaImage);
-        setCaptchaState(result.captchaState);
+        setCaptchaSession(result.captchaSession);
         setCaptchaCode('');
         setStep('captcha');
         setLoading(false);
@@ -114,7 +114,7 @@ export function PorscheConnectModal({
 
   const handleCaptchaSubmit = async (e) => {
     e.preventDefault();
-    await handleLogin(null, { code: captchaCode, state: captchaState });
+    await handleLogin(null, { code: captchaCode, session: captchaSession });
   };
 
   const handleFetchData = async () => {
@@ -342,7 +342,7 @@ export function PorscheConnectModal({
                   onClick={() => {
                     setStep('login');
                     setCaptchaImage(null);
-                    setCaptchaState(null);
+                    setCaptchaSession(null);
                     setCaptchaCode('');
                     setError(null);
                   }}

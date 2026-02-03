@@ -82,16 +82,16 @@ export async function checkServerAvailable() {
  * @param {string} password - Porsche ID password
  * @param {Object} captcha - Optional captcha data
  * @param {string} captcha.code - Captcha code entered by user
- * @param {string} captcha.state - Captcha state from server
- * @returns {Promise<{sessionId: string, expiresIn: number} | {captchaRequired: true, captchaImage: string, captchaState: string}>}
+ * @param {string} captcha.session - Captcha session data from server (base64 encoded)
+ * @returns {Promise<{sessionId: string, expiresIn: number} | {captchaRequired: true, captchaImage: string, captchaSession: string}>}
  */
 export async function login(email, password, captcha = null) {
   const body = { email, password };
 
-  // Add captcha if provided
-  if (captcha?.code && captcha?.state) {
+  // Add captcha if provided (using session-based approach for serverless)
+  if (captcha?.code && captcha?.session) {
     body.captchaCode = captcha.code;
-    body.captchaState = captcha.state;
+    body.captchaSession = captcha.session;
   }
 
   const response = await fetch(`${API_BASE}/api/porsche/login`, {
@@ -107,7 +107,7 @@ export async function login(email, password, captcha = null) {
     return {
       captchaRequired: true,
       captchaImage: data.captchaImage,
-      captchaState: data.captchaState
+      captchaSession: data.captchaSession
     };
   }
 

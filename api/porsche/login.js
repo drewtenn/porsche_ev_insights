@@ -1,6 +1,9 @@
 /**
  * Vercel Serverless Function: POST /api/porsche/login
  * Handles Porsche Connect OAuth2 authentication
+ *
+ * Optimized for serverless: cookies are passed to client and back
+ * to handle captcha flow across different function instances.
  */
 
 import { JSDOM } from 'jsdom';
@@ -18,9 +21,8 @@ const CONFIG = {
   ]
 };
 
-// In-memory stores (will reset on cold starts - acceptable for this use case)
+// In-memory token store (tokens persist within same instance)
 const tokenStore = new Map();
-const captchaSessionStore = new Map();
 
 // Export token store for other API routes to access
 export { tokenStore };
@@ -46,6 +48,20 @@ function resolveUrl(location, baseUrl) {
   }
 }
 
+// Encode session data to send to client
+function encodeSessionData(data) {
+  return Buffer.from(JSON.stringify(data)).toString('base64');
+}
+
+// Decode session data from client
+function decodeSessionData(encoded) {
+  try {
+    return JSON.parse(Buffer.from(encoded, 'base64').toString('utf8'));
+  } catch {
+    return null;
+  }
+}
+
 export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -60,7 +76,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email, password, captchaCode, captchaState } = req.body;
+  const { email, password, captchaCode, captchaSession } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password required' });
@@ -73,14 +89,15 @@ export default async function handler(req, res) {
     let cookies = '';
     let loginState = '';
 
-    // Check if this is a captcha retry
-    if (captchaCode && captchaState) {
-      const storedSession = captchaSessionStore.get(captchaState);
-      if (storedSession) {
-        console.log('[Auth] Resuming captcha session with stored cookies');
-        cookies = storedSession.cookies;
-        loginState = captchaState;
-        captchaSessionStore.delete(captchaState);
+    // Check if this is a captcha retry - restore session from client
+    if (captchaCode && captchaSession) {
+      const sessionData = decodeSessionData(captchaSession);
+      if (sessionData) {
+        console.log('[Auth] Resuming captcha session from client data');
+        cookies = sessionData.cookies;
+        loginState = sessionData.state;
+      } else {
+        return res.status(400).json({ error: 'Invalid captcha session' });
       }
     }
 
@@ -129,11 +146,10 @@ export default async function handler(req, res) {
     }
 
     // Step 2: Submit email
-    const effectiveState = captchaState || loginState;
     const identifierUrl = `https://${CONFIG.AUTHORIZATION_SERVER}/u/login/identifier`;
 
     const identifierBody = {
-      state: effectiveState,
+      state: loginState,
       username: email,
       'js-available': 'true',
       'webauthn-available': 'false',
@@ -168,24 +184,19 @@ export default async function handler(req, res) {
 
         if (captchaImg) {
           const captchaSrc = captchaImg.getAttribute('src');
-          captchaSessionStore.set(effectiveState, {
-            cookies,
-            email,
-            timestamp: Date.now()
-          });
 
-          // Clean up old sessions
-          for (const [key, value] of captchaSessionStore.entries()) {
-            if (Date.now() - value.timestamp > 300000) {
-              captchaSessionStore.delete(key);
-            }
-          }
+          // Encode session data to send to client (stateless approach)
+          const sessionData = encodeSessionData({
+            cookies,
+            state: loginState,
+            email
+          });
 
           return res.status(400).json({
             error: 'Captcha required',
             captchaRequired: true,
             captchaImage: captchaSrc,
-            captchaState: effectiveState
+            captchaSession: sessionData
           });
         }
         return res.status(400).json({ error: 'Captcha required but could not extract image' });
@@ -217,10 +228,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Brief wait before resuming (reduced from 2500ms for serverless timeout)
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Step 4: Follow redirects to get authorization code
+    // Step 4: Follow redirects to get authorization code (no wait needed)
     let codeLocation = resolveUrl(passwordResponse.headers.get('location'), authBaseUrl);
     let authCode = null;
 
