@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="https://jpleite.github.io/porsche_ev_insights/">Live Demo</a> •
+  <a href="https://porsche-ev.magicbytestudios.com">Live Demo</a> •
   <a href="https://github.com/jpleite/porsche_ev_insights/wiki">Documentation</a> •
   <a href="#features">Features</a> •
   <a href="#getting-started">Getting Started</a> •
@@ -115,6 +115,12 @@ All data is imported from Porsche in metric units and automatically converted ba
 </p>
 
 <p align="center">
+  <img src="screenshots/mycar.png" alt="My Car" width="800"/>
+  <br/>
+  <em>My Car - Live vehicle status via Porsche Connect</em>
+</p>
+
+<p align="center">
   <img src="screenshots/patterns.png" alt="Driving Patterns" width="800"/>
   <br/>
   <em>Driving Patterns - When and how you drive</em>
@@ -160,7 +166,7 @@ All data is imported from Porsche in metric units and automatically converted ba
 
 ### Use Online
 
-Visit **[jpleite.github.io/porsche_ev_insights](https://jpleite.github.io/porsche_ev_insights/)** - no installation required.
+Visit **[porsche-ev.magicbytestudios.com](https://porsche-ev.magicbytestudios.com)** - no installation required.
 
 ### Run Locally
 
@@ -244,6 +250,12 @@ Contributions are welcome! Feel free to:
 - Submit pull requests
 
 ## Release History
+
+### v2.0.1-beta (February 2026)
+- **Theme settings**: Moved theme toggle to Settings with Auto/Light/Dark options
+- **Auto theme**: Automatically matches your system's light/dark preference
+- **Captcha visibility fix**: Fixed dark mode captcha visibility issue
+- **API path fixes**: Fixed local development server compatibility
 
 ### v2.0.0-beta (February 2026)
 - **Porsche silhouette branding**: New Porsche car icon throughout the app

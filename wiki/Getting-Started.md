@@ -27,7 +27,7 @@ For detailed instructions on exporting, see [Exporting Data from My Porsche](Exp
 
 Visit the dashboard at:
 
-**[https://jpleite.github.io/porsche_ev_insights](https://jpleite.github.io/porsche_ev_insights)**
+**[https://porsche-ev.magicbytestudios.com](https://porsche-ev.magicbytestudios.com)**
 
 You'll see a welcome screen with two options:
 

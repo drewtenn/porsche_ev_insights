@@ -23,7 +23,7 @@ The dashboard supports all Porsche electric vehicles and the Audi e-tron GT:
 ## Quick Start
 
 1. Export your trip data from the My Porsche app (see [Exporting Data from My Porsche](Exporting-Data-from-My-Porsche))
-2. Visit the dashboard at [https://jpleite.github.io/porsche_ev_insights](https://jpleite.github.io/porsche_ev_insights)
+2. Visit the dashboard at [https://porsche-ev.magicbytestudios.com](https://porsche-ev.magicbytestudios.com)
 3. Upload your CSV file(s)
 4. Explore your driving analytics
 
@@ -70,4 +70,4 @@ Porsche EV Insights is open source. You can find the source code and contribute 
 
 ## Version
 
-This documentation covers version 1.3.3-beta and later.
+This documentation covers version 2.0.1-beta and later.
