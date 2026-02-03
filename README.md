@@ -233,13 +233,15 @@ This way you can build up a complete history beyond the 12-month limit. Merging 
 
 ## Privacy
 
-**Your data never leaves your device.**
+**Your trip data never leaves your device.**
 
-- No backend servers
+- CSV/ZIP data is processed entirely in your browser
 - No analytics or tracking
 - No cookies (except your own browser storage)
-- Data stored locally in your browser's localStorage
+- Trip data stored locally in your browser's localStorage
 - Works completely offline after first load
+
+**My Car feature:** The optional My Car tab uses Porsche Connect API via serverless functions. Your Porsche credentials are sent directly to Porsche servers for authentication - we don't store them. Session tokens are stored locally in your browser.
 
 ## Contributing
 

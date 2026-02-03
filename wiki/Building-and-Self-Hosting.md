@@ -45,7 +45,7 @@ This installs:
 
 ## Running Locally
 
-### Development Server
+### Development Server (Frontend Only)
 
 Start the development server:
 
@@ -59,6 +59,28 @@ The server starts at `http://localhost:5173` with:
 - Fast refresh - preserves component state during edits
 
 Press `Ctrl+C` to stop the server.
+
+**Note:** This mode doesn't include the My Car feature. For full functionality, use `npm run dev:full`.
+
+### Development Server (Full - with My Car)
+
+To enable the **My Car** tab with live Porsche Connect data:
+
+```bash
+npm run dev:full
+```
+
+This starts both:
+- Frontend dev server at `http://localhost:5173`
+- Porsche Connect proxy server at `http://localhost:3001`
+
+The proxy server handles OAuth authentication with Porsche Connect API, including captcha challenges.
+
+Alternatively, start them separately:
+```bash
+npm run dev      # Frontend only
+npm run server   # Proxy server only (in another terminal)
+```
 
 ### Preview Production Build
 
@@ -89,9 +111,33 @@ The build output is entirely static and can be hosted on any web server.
 
 ## Deployment Options
 
-### GitHub Pages (Recommended)
+### Vercel (Recommended)
 
-The project includes built-in GitHub Pages deployment:
+Vercel is the recommended deployment option because it supports the **My Car** feature via serverless functions for Porsche Connect API integration.
+
+The official deployment is at: **[porsche-ev.magicbytestudios.com](https://porsche-ev.magicbytestudios.com)**
+
+**Deployment steps:**
+1. Import your repository to Vercel
+2. Framework preset: Vite (auto-detected)
+3. Build command: `npm run build`
+4. Output directory: `dist`
+5. Deploy
+
+Vercel automatically detects the `api/` folder and deploys serverless functions for:
+- `/api/porsche/login` - OAuth authentication with captcha support
+- `/api/porsche/vehicles` - List user's vehicles
+- `/api/porsche/vehicle/[vin]/overview` - Battery, range status
+- `/api/porsche/vehicle/[vin]/status` - Full vehicle status
+- `/api/porsche/vehicle/[vin]/pictures` - Official vehicle renders
+
+**Custom domain setup:**
+1. Add your domain in Vercel Project Settings → Domains
+2. Configure DNS: CNAME record pointing to `cname.vercel-dns.com`
+
+### GitHub Pages
+
+GitHub Pages can host the static frontend, but the **My Car** feature won't work (no serverless functions).
 
 ```bash
 npm run deploy
@@ -114,13 +160,7 @@ This command:
 3. Set publish directory: `dist`
 4. Deploy
 
-### Vercel
-
-1. Import your repository to Vercel
-2. Framework preset: Vite
-3. Build command: `npm run build`
-4. Output directory: `dist`
-5. Deploy
+**Note:** My Car feature requires additional Netlify Functions setup (not documented here).
 
 ### Any Static Host
 
@@ -166,8 +206,12 @@ porsche_ev_insights/
 │   ├── utils/          # Utility functions
 │   ├── i18n/           # Internationalization
 │   └── pages/          # Page-level components
+├── api/                 # Vercel serverless functions (production)
+│   └── porsche/        # Porsche Connect API endpoints
+├── server/              # Local Express proxy (development)
 ├── package.json        # Dependencies and scripts
 ├── vite.config.js      # Vite configuration
+├── vercel.json         # Vercel deployment config
 ├── eslint.config.js    # ESLint configuration
 └── index.html          # HTML entry point
 ```
@@ -176,7 +220,9 @@ porsche_ev_insights/
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start development server |
+| `npm run dev` | Start frontend development server |
+| `npm run dev:full` | Start frontend + Porsche Connect proxy (for My Car) |
+| `npm run server` | Start Porsche Connect proxy only |
 | `npm run build` | Create production build |
 | `npm run preview` | Preview production build |
 | `npm run lint` | Run ESLint code checks |
