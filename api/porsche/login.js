@@ -217,8 +217,8 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Wait before resuming
-    await new Promise(resolve => setTimeout(resolve, 2500));
+    // Brief wait before resuming (reduced from 2500ms for serverless timeout)
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     // Step 4: Follow redirects to get authorization code
     let codeLocation = resolveUrl(passwordResponse.headers.get('location'), authBaseUrl);
