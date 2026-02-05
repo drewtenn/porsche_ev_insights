@@ -3,12 +3,37 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "8080:80"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/api/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:3001/api/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
+    networks:
+      - traefik
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+
+      # HTTP entrypoint routing
+      - "traefik.http.routers.porsche-http.entrypoints=web"
+      - "traefik.http.routers.porsche-http.rule=Host(`porsche.yourdomain.com`)"
+      - "traefik.http.routers.porsche-http.middlewares=redirect-to-https@docker"
+
+      # HTTPS entrypoint routing
+      - "traefik.http.routers.porsche-https.entrypoints=websecure"
+      - "traefik.http.routers.porsche-https.rule=Host(`porsche.yourdomain.com`)"
+      - "traefik.http.routers.porsche-https.tls=true"
+      - "traefik.http.routers.porsche-https.tls.certresolver=letsencrypt"
+
+      # Service configuration
+      - "traefik.http.services.porsche.loadbalancer.server.port=3001"
+
+      # Redirect HTTP to HTTPS middleware
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+
+networks:
+  traefik:
+    external: true
