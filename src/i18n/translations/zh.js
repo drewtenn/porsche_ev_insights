@@ -158,6 +158,7 @@ export const zh = {
     electricConsumption: '电能消耗',
     distanceUnit: '距离',
     speedUnit: '速度',
+    pressureUnit: '轮胎压力',
 
     // Cost settings section
     costSettings: '成本设置',
@@ -568,6 +569,7 @@ export const zh = {
     noDataTitle: '未连接车辆',
     noDataDesc: '连接到Porsche Connect以查看您的车辆信息。',
     connectButton: '连接到保时捷',
+    selectVehicle: '选择车辆',
     vehiclePhotos: '车辆照片',
     lastKnownLocation: '最后已知位置',
     locationUnavailable: '位置数据不可用',

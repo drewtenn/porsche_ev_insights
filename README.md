@@ -253,6 +253,12 @@ Contributions are welcome! Feel free to:
 
 ## Release History
 
+### v2.0.2-beta (February 2026)
+- **Multi-vehicle support**: Vehicle selector for Porsche Connect accounts with multiple cars
+- **VIN persistence**: Remembers your selected vehicle across sessions
+- **Generation display**: Shows J1.1/J1.2 generation based on model year
+- **Tire pressure units**: New PSI/bar toggle in Settings
+
 ### v2.0.1-beta (February 2026)
 - **Theme settings**: Moved theme toggle to Settings with Auto/Light/Dark options
 - **Auto theme**: Automatically matches your system's light/dark preference

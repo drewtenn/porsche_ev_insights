@@ -27,6 +27,8 @@ export function SettingsPage({
   setBatteryCapacity,
   selectedVehicleId,
   setSelectedVehicleId,
+  pressureUnit,
+  setPressureUnit,
   setShowUpload,
   setShowPorscheConnect,
   handleClearData,
@@ -77,7 +79,7 @@ export function SettingsPage({
     <div className="space-y-6">
       <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{t('settings.title')}</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
         {/* Vehicle Settings */}
         <div className={`p-4 rounded-xl border ${darkMode ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}>
           <h3 className={`text-sm font-semibold mb-4 ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{t('settings.vehicleSettings')}</h3>
@@ -208,6 +210,17 @@ export function SettingsPage({
                 ))}
               </select>
             </div>
+            <div>
+              <label className={`block text-xs mb-1 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('settings.pressureUnit')}</label>
+              <select
+                value={pressureUnit}
+                onChange={(e) => setPressureUnit(e.target.value)}
+                className={`w-full px-3 py-2 rounded-lg text-sm focus:border-sky-500 outline-none ${darkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-50 border-zinc-300 text-zinc-900'} border`}
+              >
+                <option value="bar">bar</option>
+                <option value="psi">PSI</option>
+              </select>
+            </div>
             <p className={`text-xs ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
               {t('settings.distanceUnit')}: {UNIT_SYSTEMS[unitSystem].distance} | {t('settings.speedUnit')}: {UNIT_SYSTEMS[unitSystem].speed}
             </p>
@@ -215,9 +228,9 @@ export function SettingsPage({
         </div>
 
         {/* Cost Settings + Theme (stacked) */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 h-full">
           {/* Cost Settings */}
-          <div className={`p-4 rounded-xl border ${darkMode ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}>
+          <div className={`flex-1 p-4 rounded-xl border ${darkMode ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}>
             <h3 className={`text-sm font-semibold mb-3 ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{t('settings.costSettings')}</h3>
             <div className="space-y-2">
               <div>
@@ -236,7 +249,7 @@ export function SettingsPage({
           </div>
 
           {/* Theme Settings */}
-          <div className={`p-4 rounded-xl border ${darkMode ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}>
+          <div className={`flex-1 p-4 rounded-xl border ${darkMode ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}>
             <h3 className={`text-sm font-semibold mb-3 ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{t('settings.theme')}</h3>
             <div className="space-y-2">
               {[

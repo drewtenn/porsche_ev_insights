@@ -158,6 +158,7 @@ export const ja = {
     electricConsumption: '電費',
     distanceUnit: '距離',
     speedUnit: '速度',
+    pressureUnit: 'タイヤ空気圧',
 
     // Cost settings section
     costSettings: 'コスト設定',
@@ -568,6 +569,7 @@ export const ja = {
     noDataTitle: '車両が接続されていません',
     noDataDesc: 'Porsche Connectに接続して、車両情報を表示してください。',
     connectButton: 'ポルシェに接続',
+    selectVehicle: '車両を選択',
     vehiclePhotos: '車両写真',
     lastKnownLocation: '最後の既知の位置',
     locationUnavailable: '位置データが利用できません',

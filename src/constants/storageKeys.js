@@ -4,5 +4,6 @@ export const STORAGE_KEYS = {
   RAW_DATA: 'taycan_raw_data', // Raw CSV rows for merging
   SETTINGS: 'taycan_settings',
   THEME: 'taycan_theme',
-  VEHICLE_MODEL: 'porsche_vehicle_model'
+  VEHICLE_MODEL: 'porsche_vehicle_model',
+  PORSCHE_CONNECT_VIN: 'porsche_connect_vin' // Selected VIN for multi-vehicle accounts
 };

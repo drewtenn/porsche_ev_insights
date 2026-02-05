@@ -158,6 +158,7 @@ export const fr = {
     electricConsumption: 'Consommation électrique',
     distanceUnit: 'Distance',
     speedUnit: 'Vitesse',
+    pressureUnit: 'Pression des pneus',
 
     // Cost settings section
     costSettings: 'Paramètres de coût',
@@ -568,6 +569,7 @@ export const fr = {
     noDataTitle: 'Aucun véhicule connecté',
     noDataDesc: 'Connectez-vous à Porsche Connect pour afficher les informations de votre véhicule.',
     connectButton: 'Connecter à Porsche',
+    selectVehicle: 'Sélectionner un véhicule',
     vehiclePhotos: 'Photos du véhicule',
     lastKnownLocation: 'Dernière position connue',
     locationUnavailable: 'Données de localisation non disponibles',

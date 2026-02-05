@@ -73,6 +73,11 @@ export default function App() {
   const [showPorscheConnect, setShowPorscheConnect] = useState(false); // Porsche Connect modal
   const [autoSyncStatus, setAutoSyncStatus] = useState(null); // 'checking', 'syncing', 'done', 'new_data', null
   const [liveVehicleData, setLiveVehicleData] = useState(null); // Live vehicle data from Porsche Connect API
+  const [availableVehicles, setAvailableVehicles] = useState([]); // List of vehicles from Porsche Connect
+  const [selectedConnectVin, setSelectedConnectVin] = useState(() => {
+    return safeStorage.get(STORAGE_KEYS.PORSCHE_CONNECT_VIN) || null;
+  }); // Selected VIN for multi-vehicle accounts
+  const [pressureUnit, setPressureUnit] = useState('bar'); // Pressure unit: 'bar' or 'psi'
   // Theme mode: 'light', 'dark', 'auto'
   const [themeMode, setThemeMode] = useState(() => {
     const saved = safeStorage.get('taycan_theme_mode');
@@ -147,12 +152,20 @@ export default function App() {
       setFuelConsFormat(savedSettings.fuelConsFormat ?? 'L/100km');
       setElecConsFormat(savedSettings.elecConsFormat ?? 'kWh/100km');
       if (savedSettings.selectedVehicleId) setSelectedVehicleId(savedSettings.selectedVehicleId);
+      if (savedSettings.pressureUnit) setPressureUnit(savedSettings.pressureUnit);
     }
   }, []);
 
   useEffect(() => {
-    safeStorage.set(STORAGE_KEYS.SETTINGS, { electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat, selectedVehicleId });
-  }, [electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat, selectedVehicleId]);
+    safeStorage.set(STORAGE_KEYS.SETTINGS, { electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat, selectedVehicleId, pressureUnit });
+  }, [electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat, selectedVehicleId, pressureUnit]);
+
+  // Save selected Porsche Connect VIN to localStorage
+  useEffect(() => {
+    if (selectedConnectVin) {
+      safeStorage.set(STORAGE_KEYS.PORSCHE_CONNECT_VIN, selectedConnectVin);
+    }
+  }, [selectedConnectVin]);
 
   // Auto-sync with Porsche Connect on page load (background)
   useEffect(() => {
@@ -249,6 +262,7 @@ export default function App() {
       const session = getStoredSession();
       if (!session) {
         setLiveVehicleData(null);
+        setAvailableVehicles([]);
         return;
       }
 
@@ -256,11 +270,23 @@ export default function App() {
         const vehicles = await getVehicles();
         if (!vehicles || vehicles.length === 0) {
           setLiveVehicleData(null);
+          setAvailableVehicles([]);
           return;
         }
 
-        const vehicle = vehicles[0];
+        // Store available vehicles for selector
+        setAvailableVehicles(vehicles);
+
+        // Use selected VIN or fall back to first vehicle
+        const vehicle = selectedConnectVin
+          ? vehicles.find(v => v.vin === selectedConnectVin) || vehicles[0]
+          : vehicles[0];
         const vin = vehicle.vin;
+
+        // Auto-select first vehicle if none selected
+        if (!selectedConnectVin && vehicles.length > 0) {
+          setSelectedConnectVin(vehicles[0].vin);
+        }
 
         // Fetch overview, full status, and pictures in parallel
         const [overview, fullStatus, pictures] = await Promise.all([
@@ -376,7 +402,7 @@ export default function App() {
     };
 
     fetchLiveVehicleData();
-  }, [showPorscheConnect]); // Re-fetch when modal closes (user may have logged in)
+  }, [showPorscheConnect, selectedConnectVin]); // Re-fetch when modal closes or vehicle changes
 
   // Reset consumption formats and currency when unit system changes
   useEffect(() => {
@@ -472,9 +498,10 @@ export default function App() {
       elecConsUnit: elecConsFormat,
       fuelConsUnit: fuelConsFormat,
       volUnit: sys.volume,
-      currSymbol: curr.symbol
+      currSymbol: curr.symbol,
+      pressure: pressureUnit
     };
-  }, [unitSystem, currency, elecConsFormat, fuelConsFormat]);
+  }, [unitSystem, currency, elecConsFormat, fuelConsFormat, pressureUnit]);
 
   // Personalized vehicle name for UI display
   const vehicleDisplayName = useMemo(() => {
@@ -1204,7 +1231,7 @@ export default function App() {
 
   const handleBackup = useCallback(() => {
     try {
-      const backup = { version: 4, timestamp: new Date().toISOString(), data: appData, rawData, vehicleModel, settings: { electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat, language, selectedVehicleId } };
+      const backup = { version: 5, timestamp: new Date().toISOString(), data: appData, rawData, vehicleModel, settings: { electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat, language, selectedVehicleId, pressureUnit } };
       const modelSlug = vehicleModel ? vehicleModel.toLowerCase().replace(/\s+/g, '-') : 'porsche';
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
       const filename = `${modelSlug}-backup-${timestamp}.json`;
@@ -1212,7 +1239,7 @@ export default function App() {
     } catch (err) {
       setModalConfig({ title: 'Export Error', message: 'Failed to create backup: ' + err.message, variant: 'danger' });
     }
-  }, [appData, rawData, vehicleModel, electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat, language, selectedVehicleId]);
+  }, [appData, rawData, vehicleModel, electricityPrice, petrolPrice, petrolConsumption, batteryCapacity, unitSystem, currency, fuelConsFormat, elecConsFormat, language, selectedVehicleId, pressureUnit]);
 
   const handleRestore = useCallback((file) => {
     const reader = new FileReader();
@@ -1250,6 +1277,10 @@ export default function App() {
           // Restore selected vehicle ID if present (v3+ backups)
           if (backup.settings.selectedVehicleId) {
             setSelectedVehicleId(backup.settings.selectedVehicleId);
+          }
+          // Restore pressure unit if present (v5+ backups)
+          if (backup.settings.pressureUnit) {
+            setPressureUnit(backup.settings.pressureUnit);
           }
         }
         setModalConfig({ title: 'Success', message: 'Backup restored successfully!', variant: 'success' });
@@ -1533,6 +1564,8 @@ export default function App() {
               setBatteryCapacity={setBatteryCapacity}
               selectedVehicleId={selectedVehicleId}
               setSelectedVehicleId={setSelectedVehicleId}
+              pressureUnit={pressureUnit}
+              setPressureUnit={setPressureUnit}
               setShowUpload={setShowUpload}
               setShowPorscheConnect={setShowPorscheConnect}
               handleClearData={handleClearData}
@@ -1663,6 +1696,9 @@ export default function App() {
                   units={units}
                   vehicleData={liveVehicleData}
                   onConnect={() => setShowPorscheConnect(true)}
+                  availableVehicles={availableVehicles}
+                  selectedVin={selectedConnectVin}
+                  onVehicleChange={setSelectedConnectVin}
                 />
               )}
             </>

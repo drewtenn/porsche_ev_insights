@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '../../i18n';
+import { PORSCHE_EV_MODELS } from '../../constants/porscheEvModels';
 
 // Image Carousel Component
 function ImageCarousel({ images, darkMode }) {
@@ -362,11 +363,32 @@ function StatusCard({ icon, label, value, subValue, color, darkMode }) {
   );
 }
 
+// Helper to infer generation (J1.1 or J1.2) from model year
+function inferGeneration(apiGeneration, modelYear) {
+  // If API already returns J1.1 or J1.2, use it
+  if (apiGeneration && (apiGeneration === 'J1.1' || apiGeneration === 'J1.2')) {
+    return apiGeneration;
+  }
+
+  // Cross-reference with model year
+  if (modelYear) {
+    const year = parseInt(modelYear, 10);
+    if (year >= 2025) return 'J1.2';
+    if (year >= 2020 && year <= 2024) return 'J1.1';
+  }
+
+  // If API returns just "J1", return as-is (we couldn't determine more specific)
+  return apiGeneration || null;
+}
+
 export function MyCarTab({
   darkMode,
   units,
   vehicleData, // Live vehicle data from API
   onConnect, // Callback to open Porsche Connect modal
+  availableVehicles = [], // List of vehicles for multi-vehicle accounts
+  selectedVin, // Currently selected VIN
+  onVehicleChange, // Callback when user selects a different vehicle
 }) {
   const { t } = useTranslation();
 
@@ -404,8 +426,34 @@ export function MyCarTab({
     ? new Date(status.batteryLevel.lastModified).toLocaleString()
     : null;
 
+  // Infer generation from API data and model year
+  const displayGeneration = inferGeneration(
+    vehicle?.modelType?.generation,
+    vehicle?.modelType?.year
+  );
+
   return (
     <div className="space-y-5">
+      {/* Vehicle Selector (for multi-vehicle accounts) */}
+      {availableVehicles.length > 1 && (
+        <div className={`p-4 rounded-xl border ${darkMode ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-zinc-200'}`}>
+          <label className={`block text-xs mb-2 ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
+            {t('myCar.selectVehicle')}
+          </label>
+          <select
+            value={selectedVin || ''}
+            onChange={(e) => onVehicleChange && onVehicleChange(e.target.value)}
+            className={`w-full px-3 py-2 rounded-lg text-sm focus:border-sky-500 outline-none ${darkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-50 border-zinc-300 text-zinc-900'} border`}
+          >
+            {availableVehicles.map(v => (
+              <option key={v.vin} value={v.vin}>
+                {v.modelName || 'Porsche'} {v.modelType?.year ? `(${v.modelType.year})` : ''} - {v.vin.slice(-6)}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* Vehicle Header Banner */}
       <div className={`p-6 rounded-2xl border ${darkMode ? 'bg-gradient-to-br from-sky-500/10 to-blue-500/10 border-sky-500/20' : 'bg-gradient-to-br from-sky-50 to-blue-50 border-sky-200'}`}>
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -415,7 +463,7 @@ export function MyCarTab({
             </h2>
             <p className={`text-sm mt-1 ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
               {vehicle?.modelType?.year && `${vehicle.modelType.year} • `}
-              {vehicle?.modelType?.generation && `${t('myCar.generation')} ${vehicle.modelType.generation}`}
+              {displayGeneration && `${t('myCar.generation')} ${displayGeneration}`}
             </p>
             <p className={`text-xs mt-2 font-mono ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
               VIN: {vehicle?.vin}

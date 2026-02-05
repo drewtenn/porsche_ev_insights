@@ -158,6 +158,7 @@ export const nl = {
     electricConsumption: 'Elektrisch verbruik',
     distanceUnit: 'Afstand',
     speedUnit: 'Snelheid',
+    pressureUnit: 'Bandenspanning',
 
     // Cost settings section
     costSettings: 'Kosteninstellingen',
@@ -568,6 +569,7 @@ export const nl = {
     noDataTitle: 'Geen voertuig verbonden',
     noDataDesc: 'Maak verbinding met Porsche Connect om uw voertuiginformatie te bekijken.',
     connectButton: 'Verbinden met Porsche',
+    selectVehicle: 'Selecteer voertuig',
     vehiclePhotos: 'Voertuigfoto\'s',
     lastKnownLocation: 'Laatst bekende locatie',
     locationUnavailable: 'Locatiegegevens niet beschikbaar',
