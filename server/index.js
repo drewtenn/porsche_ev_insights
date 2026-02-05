@@ -867,6 +867,15 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Serve static frontend files
+const publicPath = path.join(__dirname, '..', 'public');
+app.use(express.static(publicPath));
+
+// SPA fallback - serve index.html for all non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(publicPath, 'index.html'));
+});
+
 // Bind to 0.0.0.0 to allow access from other devices on the local network (e.g., mobile testing)
 // This is safe as this server is for LOCAL DEVELOPMENT ONLY and is never deployed.
 app.listen(PORT, '0.0.0.0', () => {
