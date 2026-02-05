@@ -1,0 +1,44 @@
+# Dependencies
+node_modules
+server/node_modules
+
+# Build output
+dist
+
+# Development files
+.git
+.gitignore
+.env
+.env.*
+*.log
+
+# IDE/Editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+coverage
+*.test.js
+*.spec.js
+
+# Documentation (not needed in container)
+*.md
+!README.md
+docs
+
+# Temporary files
+*.tmp
+*.temp
+.tokens.json
+
+# Docker files (avoid recursive copies)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
