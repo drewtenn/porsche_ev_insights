@@ -7,10 +7,9 @@
 
 import { PORSCHE_EV_MODELS } from '../constants/porscheEvModels';
 
-// In production (Vercel), API routes are at /api/porsche/*
-// In development, they're at localhost:3001/api/* (different path structure)
-const API_BASE = import.meta.env.DEV ? 'http://localhost:3001' : '';
-const IS_DEV = import.meta.env.DEV;
+// API base - empty string means same origin (frontend served by Express)
+// In development with Vite, proxy is configured to forward /api to localhost:3001
+const API_BASE = '';
 
 // Storage keys for session persistence
 const SESSION_KEY = 'porsche_connect_session';
@@ -67,7 +66,7 @@ export function clearSession() {
  */
 export async function checkServerAvailable() {
   try {
-    const healthUrl = IS_DEV ? `${API_BASE}/api/health` : `${API_BASE}/api/porsche/health`;
+    const healthUrl = `${API_BASE}/api/health`;
     const response = await fetch(healthUrl, {
       method: 'GET',
       signal: AbortSignal.timeout(5000)
@@ -91,18 +90,12 @@ export async function login(email, password, captcha = null) {
   const body = { email, password };
 
   // Add captcha if provided
-  // Dev server uses captchaState, Vercel uses captchaSession (stateless)
   if (captcha?.code) {
-    if (IS_DEV) {
-      body.captchaCode = captcha.code;
-      body.captchaState = captcha.session; // Dev server uses state-based approach
-    } else {
-      body.captchaCode = captcha.code;
-      body.captchaSession = captcha.session; // Vercel uses stateless session
-    }
+    body.captchaCode = captcha.code;
+    body.captchaState = captcha.session;
   }
 
-  const loginUrl = IS_DEV ? `${API_BASE}/api/auth/login` : `${API_BASE}/api/porsche/login`;
+  const loginUrl = `${API_BASE}/api/auth/login`;
   const response = await fetch(loginUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -146,7 +139,7 @@ export async function refreshToken() {
   if (!sessionId) return false;
 
   try {
-    const refreshUrl = IS_DEV ? `${API_BASE}/api/auth/refresh` : `${API_BASE}/api/porsche/refresh`;
+    const refreshUrl = `${API_BASE}/api/auth/refresh`;
     const response = await fetch(refreshUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -175,7 +168,7 @@ export async function logout() {
   const sessionId = getStoredSession();
   if (sessionId) {
     try {
-      const logoutUrl = IS_DEV ? `${API_BASE}/api/auth/logout` : `${API_BASE}/api/porsche/logout`;
+      const logoutUrl = `${API_BASE}/api/auth/logout`;
       await fetch(logoutUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

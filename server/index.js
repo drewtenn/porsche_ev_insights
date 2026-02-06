@@ -19,8 +19,8 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Token persistence file path
-const TOKEN_FILE = path.join(__dirname, '.tokens.json');
+// Token persistence file path (configurable via TOKEN_FILE env var for Docker volume mounts)
+const TOKEN_FILE = process.env.TOKEN_FILE || path.join(__dirname, '.tokens.json');
 
 // Porsche Connect API configuration
 const CONFIG = {
