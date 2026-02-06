@@ -130,16 +130,14 @@ function saveTokens() {
 // Load tokens on startup
 loadTokens();
 
-// CORS configuration for development proxy server
-// NOTE: This server is for LOCAL DEVELOPMENT ONLY and is never deployed to production.
-// Production builds are static files served from GitHub Pages without this server.
-// Allowing local network IPs (192.168.x.x, 10.x.x.x) enables testing from mobile devices.
+// CORS configuration
+// Allow same-origin (frontend served by this server), localhost, and private network IPs
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, etc.)
+    // Allow requests with no origin (same-origin, mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
-    // Allow localhost and private network IPs for mobile testing
-    if (origin.match(/^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):\d+$/)) {
+    // Allow localhost, private network IPs, and hostname-based access
+    if (origin.match(/^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|[a-zA-Z0-9_-]+)(:\d+)?$/)) {
       return callback(null, true);
     }
     callback(new Error('Not allowed by CORS'));
