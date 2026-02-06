@@ -229,7 +229,7 @@ async function apiRequest(endpoint) {
  * @returns {Promise<Array<Vehicle>>}
  */
 export async function getVehicles() {
-  const endpoint = IS_DEV ? '/api/vehicles' : '/api/porsche/vehicles';
+  const endpoint = '/api/vehicles';
   return apiRequest(endpoint);
 }
 
@@ -239,7 +239,7 @@ export async function getVehicles() {
  * @returns {Promise<VehicleOverview>}
  */
 export async function getVehicleOverview(vin) {
-  const endpoint = IS_DEV ? `/api/vehicles/${vin}/overview` : `/api/porsche/vehicle/${vin}/overview`;
+  const endpoint = `/api/vehicles/${vin}/overview`;
   return apiRequest(endpoint);
 }
 
@@ -250,7 +250,7 @@ export async function getVehicleOverview(vin) {
  * @returns {Promise<TripStatistics>}
  */
 export async function getTripStatistics(vin, type = 'short') {
-  const endpoint = IS_DEV ? `/api/vehicles/${vin}/trips?type=${type}` : `/api/porsche/vehicle/${vin}/trips?type=${type}`;
+  const endpoint = `/api/vehicles/${vin}/trips?type=${type}`;
   return apiRequest(endpoint);
 }
 
@@ -260,7 +260,7 @@ export async function getTripStatistics(vin, type = 'short') {
  * @returns {Promise<VehicleStatus>}
  */
 export async function getVehicleStatus(vin) {
-  const endpoint = IS_DEV ? `/api/vehicles/${vin}/status` : `/api/porsche/vehicle/${vin}/status`;
+  const endpoint = `/api/vehicles/${vin}/status`;
   return apiRequest(endpoint);
 }
 
@@ -270,7 +270,7 @@ export async function getVehicleStatus(vin) {
  * @returns {Promise<VehicleCapabilities>}
  */
 export async function getVehicleCapabilities(vin) {
-  const endpoint = IS_DEV ? `/api/vehicles/${vin}/capabilities` : `/api/porsche/vehicle/${vin}/capabilities`;
+  const endpoint = `/api/vehicles/${vin}/capabilities`;
   return apiRequest(endpoint);
 }
 
@@ -280,7 +280,7 @@ export async function getVehicleCapabilities(vin) {
  * @returns {Promise<VehiclePictures>}
  */
 export async function getVehiclePictures(vin) {
-  const endpoint = IS_DEV ? `/api/vehicles/${vin}/pictures` : `/api/porsche/vehicle/${vin}/pictures`;
+  const endpoint = `/api/vehicles/${vin}/pictures`;
   return apiRequest(endpoint);
 }
 
